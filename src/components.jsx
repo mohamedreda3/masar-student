@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { student, nav } from './data.js';
+import { nav } from './data.js';
+import { useHome } from './api/useApi.js';
+import { logout } from './api/client.js';
 
 /* شعار «مسار العربية» الرسمي — SVG العميل داخل لوحة بيضاء */
 export function Logo({ h = 60 }) {
@@ -13,6 +15,7 @@ export function Logo({ h = 60 }) {
 
 export function TopBar() {
   const [open, setOpen] = useState(false);
+  const me = useHome().home?.student;
   return (
     <header className="topbar">
       <div className="container topbar-in">
@@ -29,13 +32,13 @@ export function TopBar() {
           ))}
         </nav>
         <div className="top-user">
-          <button className="top-exit" title="تسجيل الخروج">⎋</button>
+          <button className="top-exit" title="تسجيل الخروج" onClick={logout}>⎋</button>
           <div className="top-name">
-            <div className="ar">{student.ar}</div>
-            <div className="en">{student.en}</div>
+            <div className="ar">{me?.name}</div>
+            <div className="en">{me?.performance_level?.label_en ? me.performance_level.label_en + ' · Student' : 'Student'}</div>
           </div>
           <div className="avatar">
-            <img src="/img/avatar-boy.png" alt="" />
+            <img src={me?.user_image || '/img/logo-masar.svg'} alt="" />
             <span className="dot" />
           </div>
         </div>
@@ -45,12 +48,18 @@ export function TopBar() {
 }
 
 export function StatsBar() {
+  const h = useHome().home;
+  const st = h?.stats || {};
+  const first = h?.student?.name?.split(' ')[0] || '';
+  const lvl = st.current_level?.name ?? st.current_level ?? '—';
+  const nextLvl = st.next_level?.name ?? st.next_level;
+  const student = { first, notifications: st.notifications_count ?? 0, streak: st.streak_days ?? 0, points: (st.points ?? 0).toLocaleString('en'), level: lvl, nextLevel: nextLvl ?? '—', levelPct: Math.round(st.next_level_progress ?? 0) };
   return (
     <div className="container">
       <div className="statsbar">
         <div className="hello">
           <div className="h">مرحباً {student.first}</div>
-          <div className="e">Welcome back, Ahmed</div>
+          <div className="e">Welcome back</div>
           <div className="q">جاهز لمتابعة رحلتك اليوم؟</div>
         </div>
         <Link to="/notifications" className="stat" title="افتح الإشعارات">

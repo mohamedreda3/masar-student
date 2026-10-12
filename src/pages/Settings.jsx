@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { StatsBar, FooterStrip } from '../components.jsx';
-import { student } from '../data.js';
+import api from '../api/client.js';
+import { useApi, useHome } from '../api/useApi.js';
 import { Link } from 'react-router-dom';
 import { clickSound } from '../sounds.js';
 import { showToast } from '../toast.js';
@@ -43,7 +44,39 @@ function ThemePicker() {
 
 const FS_MAP = { 'A-': 'sm', 'A': null, 'A+': 'lg' };
 
+/* تغيير كلمة المرور — يفتح داخل بطاقة المعلومات الشخصية */
+function PasswordForm({ onClose }) {
+  const [cur, setCur] = useState('');
+  const [pw, setPw] = useState('');
+  const [busy, setBusy] = useState(false);
+  const save = async (e) => {
+    e.preventDefault();
+    if (pw.length < 8) return showToast('كلمة المرور الجديدة 8 أحرف على الأقل', '⚠️');
+    setBusy(true);
+    try {
+      await api.changePassword(cur, pw);
+      showToast('تم تغيير كلمة المرور', '✅');
+      onClose();
+    } catch (ex) { showToast(ex.message, '⚠️'); setBusy(false); }
+  };
+  const inp = { width: '100%', marginTop: 8, direction: 'ltr' };
+  return (
+    <form onSubmit={save} style={{ padding: '10px 0', borderBottom: '1px solid var(--line2)' }}>
+      <input className="eng-input" type="password" required placeholder="كلمة المرور الحالية" value={cur} onChange={e => setCur(e.target.value)} style={inp} />
+      <input className="eng-input" type="password" required placeholder="كلمة المرور الجديدة" value={pw} onChange={e => setPw(e.target.value)} style={inp} />
+      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+        <button className="btn-sm" type="submit" disabled={busy}>{busy ? '…' : 'حفظ'}</button>
+        <button className="btn-sm" type="button" onClick={onClose} style={{ background: 'var(--line2)', color: 'var(--ink2)' }}>إلغاء</button>
+      </div>
+    </form>
+  );
+}
+
 export default function Settings() {
+  const { data: prof } = useApi(() => api.profile(), []);
+  const me = prof?.student || {};
+  const tier = useHome().home?.tier;
+  const [pwOpen, setPwOpen] = useState(false);
   const [size, setSize] = useState(() => {
     try {
       const v = localStorage.getItem('masar-fs');
@@ -81,12 +114,12 @@ export default function Settings() {
       </div>
       <div className="container" style={{ marginTop: 26 }}>
         <div className="profile-card">
-          <div className="av"><img src="/img/avatar-boy.png" alt="" /></div>
+          <div className="av"><img src={me.user_image || '/img/logo-masar.svg'} alt="" /></div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 900, fontSize: 19 }}>{student.ar}</div>
-            <div style={{ fontSize: 11, color: 'var(--mute)' }}>{student.en}</div>
+            <div style={{ fontWeight: 900, fontSize: 19 }}>{me.name}</div>
+            <div style={{ fontSize: 11, color: 'var(--mute)' }}>{me.student_code} · {me.user_name}</div>
             <div style={{ fontSize: 12.5, color: 'var(--ink2)', marginTop: 4 }}>
-              مجموعة المتطور · سنوات دراسة العربية: 4 · الصف السادس
+              {[me.performance_level?.label, tier && `سنوات دراسة العربية: ${tier.arabic_years_now}`, tier?.label].filter(Boolean).join(' · ')}
             </div>
           </div>
           <button className="btn btn-ghost" onClick={() => { clickSound(); showToast('بيانات الملف يديرها معلمك والمدرسة', '🔒'); }}>تعديل الملف</button>
@@ -96,9 +129,12 @@ export default function Settings() {
           <div className="setting-card">
             <h3><img src="/img/gear.png" alt="" />المعلومات الشخصية</h3>
             <div className="en">Personal Information</div>
-            <div className="setting-row"><span>الاسم الكامل</span><span style={{ fontWeight: 400 }}>{student.ar}</span></div>
-            <div className="setting-row"><span>المدرسة</span><span style={{ fontWeight: 400 }}>مدرسة النور الأهلية</span></div>
-            <div className="setting-row"><span>كلمة المرور</span><button className="btn-sm" onClick={() => { clickSound(); showToast('تغيير كلمة المرور يتم عبر المدرسة', '🔒'); }}>تغيير</button></div>
+            <div className="setting-row"><span>الاسم الكامل</span><span style={{ fontWeight: 400 }}>{me.name}</span></div>
+            <div className="setting-row"><span>البريد الإلكتروني</span><span style={{ fontWeight: 400, direction: 'ltr' }}>{me.user_email}</span></div>
+            <div className="setting-row"><span>ولي الأمر</span><span style={{ fontWeight: 400 }}>{me.guardian_name}</span></div>
+            <div className="setting-row"><span>المدينة</span><span style={{ fontWeight: 400 }}>{me.city}</span></div>
+            <div className="setting-row"><span>كلمة المرور</span><button className="btn-sm" onClick={() => { clickSound(); setPwOpen(v => !v); }}>تغيير</button></div>
+            {pwOpen && <PasswordForm onClose={() => setPwOpen(false)} />}
           </div>
 
           <div className="setting-card">

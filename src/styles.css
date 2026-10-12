@@ -1991,3 +1991,105 @@ button.home-skill { font: inherit; color: inherit; text-align: start; cursor: po
 }
 .letter-chip:hover { border-color: var(--brand); color: var(--brand); transform: translateY(-2px); }
 .letter-chip.active { background: var(--brand); border-color: var(--brand); color: #fff; box-shadow: 0 6px 14px color-mix(in srgb, var(--brand) 35%, transparent); }
+
+/* ===== شاشة تسجيل الدخول — مطابقة لدخول لوحة المدرسة ===== */
+.login-page { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 40px; padding: 40px clamp(16px, 6vw, 110px); background: #fff; color: #1f2937; }
+.login-form { width: 100%; max-width: 700px; justify-self: center; display: flex; flex-direction: column; align-items: center; }
+.login-title { font-family: 'Aref Ruqaa', serif; font-weight: 700; font-size: clamp(52px, 6vw, 84px); line-height: 1.3; margin: 0; color: #111827; }
+.login-rule { width: 50px; height: 3px; border-radius: 3px; background: #d1d5db; margin: 26px 0 62px; }
+.login-sub { font-size: 19px; color: #374151; margin: 0 0 26px; }
+.login-input { width: 100%; height: 88px; border: 2px solid transparent; border-radius: 999px; background: #e8f0fe; padding: 0 44px; font-family: inherit; font-size: 20px; color: #111827; text-align: right; transition: border-color .2s; }
+.login-input::placeholder { color: #6b7280; text-align: right; }
+.login-input:focus { outline: none; border-color: #22b161; }
+.login-form > .login-input, .login-pass { margin-bottom: 24px; }
+.login-pass { position: relative; width: 100%; }
+.login-pass .login-input { padding-left: 84px; }
+.login-eye { position: absolute; left: 30px; top: 50%; transform: translateY(-50%); color: #4b5563; display: grid; place-items: center; }
+.login-row { width: 100%; display: flex; justify-content: space-between; align-items: center; margin: 18px 0 50px; font-size: 19px; }
+.login-check { display: flex; align-items: center; gap: 12px; cursor: pointer; color: #374151; }
+.login-check input { position: absolute; opacity: 0; pointer-events: none; }
+.login-check .box { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #1d6fe0; display: grid; place-items: center; color: transparent; font-size: 16px; font-weight: 900; transition: .2s; }
+.login-check input:checked + .box { background: #1d6fe0; color: #fff; }
+.login-check input:focus-visible + .box { outline: 3px solid #93c5fd; }
+.login-forgot { color: #22b161; text-decoration: none; }
+.login-forgot:hover { text-decoration: underline; }
+.login-err { width: 100%; margin: -26px 0 24px; padding: 12px 20px; border-radius: 16px; background: #fef2f2; color: #b91c1c; font-size: 15px; text-align: center; }
+.login-btn { width: 100%; height: 86px; border-radius: 999px; background: #22b161; color: #fff; font-family: inherit; font-size: 24px; font-weight: 800; box-shadow: 0 6px 16px rgba(34,177,97,.28); transition: filter .2s, transform .1s; }
+.login-btn:hover { filter: brightness(1.06); }
+.login-btn:active { transform: translateY(1px); }
+.login-btn:disabled { opacity: .65; cursor: wait; }
+.login-brand { text-align: center; justify-self: center; }
+.login-brand img { width: min(600px, 100%); display: block; margin: 0 auto 60px; }
+.login-brand p { font-size: clamp(20px, 2vw, 28px); color: #1f2937; margin: 0 0 42px; }
+@media (max-width: 900px) {
+  .login-page { grid-template-columns: 1fr; gap: 10px; padding: 28px 16px; }
+  .login-brand { order: -1; }
+  .login-brand img { width: min(320px, 80%); margin-bottom: 0; }
+  .login-brand p { display: none; }
+  .login-rule { margin: 18px 0 30px; }
+  .login-input, .login-btn { height: 64px; font-size: 17px; }
+  .login-input { padding: 0 26px; }
+  .login-row { font-size: 16px; margin: 6px 0 30px; }
+}
+.login-tabs { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
+.login-tab { height: 64px; border-radius: 999px; background: #e8f0fe; color: #374151; font-family: inherit; font-size: 18px; font-weight: 700; border: 2px solid transparent; transition: .2s; }
+.login-tab.on { border-color: #22b161; background: #e9f8ef; color: #15803d; }
+
+/* صورة لم ترجع من الـAPI → شعار مسار */
+img.img-fallback { object-fit: contain !important; background: #fff; padding: 8%; }
+img[src$="logo-masar.svg"]:not(.logo-plate img):not(.login-brand img) { object-fit: contain !important; background: #fff; padding: 8%; }
+
+/* ===== بطاقة فلاش متحركة (قلب ثلاثي الأبعاد) ===== */
+.fcard { perspective: 1400px; width: min(520px, 100%); height: 320px; margin: 18px auto 0; cursor: pointer; outline: none; animation: fcard-in .45s cubic-bezier(.2,.9,.3,1.2); }
+.fcard-in { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.4,.2,.2,1); }
+.fcard.flipped .fcard-in { transform: rotateY(180deg); }
+.fcard:hover .fcard-in { box-shadow: 0 22px 44px rgba(29,111,224,.18); }
+.fcard:focus-visible .fcard-in { box-shadow: 0 0 0 4px var(--brand); }
+.fcard-in { border-radius: 26px; box-shadow: 0 14px 34px rgba(15,23,42,.12); }
+.fcard-face { position: absolute; inset: 0; border-radius: 26px; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 26px; text-align: center; overflow: hidden; }
+.fcard-face.front { background: linear-gradient(145deg, #1d6fe0, #7c3aed); color: #fff; }
+.fcard-face.back { background: linear-gradient(145deg, #0d9f5a, #14b8a6); color: #fff; transform: rotateY(180deg); }
+.fcard-face::before { content: ''; position: absolute; width: 260px; height: 260px; border-radius: 50%; background: rgba(255,255,255,.1); top: -110px; inset-inline-end: -80px; }
+.fcard-face::after { content: ''; position: absolute; width: 160px; height: 160px; border-radius: 50%; background: rgba(255,255,255,.08); bottom: -70px; inset-inline-start: -40px; }
+.fcard-face img { max-height: 110px; max-width: 70%; object-fit: contain; border-radius: 14px; position: relative; z-index: 1; }
+.fcard-face .w { font-size: clamp(30px, 6vw, 46px); font-weight: 900; line-height: 1.35; position: relative; z-index: 1; }
+.fcard-face.back .w { font-size: clamp(22px, 4vw, 30px); }
+.fcard-face .e { font-size: 16px; opacity: .9; direction: ltr; position: relative; z-index: 1; }
+.fcard-tag { position: absolute; top: 16px; inset-inline-start: 18px; font-size: 12px; font-weight: 800; background: rgba(255,255,255,.2); padding: 4px 12px; border-radius: 999px; z-index: 1; }
+.fcard-hint { position: absolute; bottom: 14px; font-size: 12.5px; opacity: .85; z-index: 1; animation: fcard-pulse 1.8s ease-in-out infinite; }
+.fcard-snd { position: relative; z-index: 2; width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,.95); color: var(--brand); font-size: 22px; display: grid; place-items: center; box-shadow: 0 6px 16px rgba(0,0,0,.18); transition: transform .15s; }
+.fcard-snd:hover { transform: scale(1.1); }
+.fcard-dots { display: flex; justify-content: center; gap: 7px; margin-top: 16px; }
+.fcard-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); transition: .25s; }
+.fcard-dots i.on { width: 26px; border-radius: 9px; background: var(--brand); }
+.fcard-dots i.ok { background: var(--green); }
+.fcard-dots i.no { background: var(--gold); }
+@keyframes fcard-in { from { opacity: 0; transform: translateY(18px) scale(.94) rotate(-2deg); } to { opacity: 1; transform: none; } }
+@keyframes fcard-pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+@media (max-width: 600px) { .fcard { height: 270px; } }
+@media (prefers-reduced-motion: reduce) { .fcard, .fcard-in, .fcard-hint { animation: none; transition: none; } }
+/* الوجه المخفي لا يستقبل النقر — وإلا تذهب نقرة 🔊 للوجه الآخر وتقلب البطاقة */
+.fcard:not(.flipped) .fcard-face.back,
+.fcard.flipped .fcard-face.front { pointer-events: none; }
+
+/* ===== تهوية الهيدر بعد إضافة «اختباراتي وواجباتي» (9 عناصر) ===== */
+.nav { gap: 10px; min-width: 0; }
+.nav-item { padding: 8px 16px; gap: 3px; white-space: nowrap; }
+.nav-item .ar { font-size: 14px; white-space: nowrap; }
+.nav-item .en { font-size: 9px; white-space: nowrap; }
+.nav-item .ico { font-size: 16px; }
+.topbar-in { gap: 14px; }
+.top-name .ar { font-size: 14px; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.top-name .en { font-size: 10px; }
+@media (max-width: 1560px) {
+  .nav { gap: 8px; }
+  .nav-item { padding: 8px 14px; }
+  .nav-item .en { display: none; }      /* الترجمة الإنكليزية تختفي في الشاشات المتوسطة */
+  .top-name { display: none; }          /* الاسم يظهر في الإعدادات — الأفاتار يكفي هنا */
+}
+@media (max-width: 1280px) {
+  .nav-item .ar { font-size: 13px; }
+  .nav { gap: 4px; }
+  .nav-item { padding: 7px 10px; }
+}

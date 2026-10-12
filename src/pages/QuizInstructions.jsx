@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import ExamInstructions from './ExamInstructions.jsx';
 import { StatsBar, SecHead } from '../components.jsx';
 import { SKILLS } from '../data.js';
 
@@ -18,7 +19,14 @@ const GUIDES = [
   { n: 5, ar: 'الحفظ التلقائي مفعّل', en: 'Autosave is On',      d: 'سيتم حفظ تقدمك تلقائياً — يمكنك العودة والمتابعة لاحقاً.',      de: 'Your progress is saved automatically.',               ico: '/img/cloudDone.png' },
 ];
 
+/* ?unit= → تعليمات اختبار الوحدة الحقيقي، وإلا الصفحة التجريبية */
 export default function QuizInstructions() {
+  const [qs] = useSearchParams();
+  const unit = qs.get('unit');
+  return unit ? <ExamInstructions unitId={unit} /> : <DemoInstructions />;
+}
+
+function DemoInstructions() {
   return (
     <div className="page">
       <StatsBar />

@@ -11,6 +11,7 @@ export const nav = [
   { to: '/',          ar: 'الرئيسية',  en: 'Home',          ico: '🏠' },
   { to: '/path',      ar: 'مساري',     en: 'My Path',       ico: '🗺️' },
   { to: '/activities',ar: 'أنشطتي',    en: 'My Activities', ico: '✏️' },
+  { to: '/assignments', ar: 'اختباراتي وواجباتي', en: 'Exams & Homework', ico: '📝' },
   { to: '/skills',    ar: 'مهاراتي',   en: 'My Skills',     ico: '🎯' },
   { to: '/reports',   ar: 'تقاريري',   en: 'My Reports',    ico: '📊' },
   { to: '/badges',    ar: 'الشارات',   en: 'Badges',        ico: '🏅' },

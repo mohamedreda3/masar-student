@@ -46,8 +46,8 @@ export function Sparkline({ data, color, id, variant = 'area' }) {
           <stop offset="1" stopColor={color} stopOpacity="0.03" />
         </linearGradient>
       </defs>
-      {ticks.map(v => (
-        <g key={v}>
+      {ticks.map((v, ti) => (
+        <g key={ti}>
           <line x1={PL} x2={W - PR} y1={yOf(v)} y2={yOf(v)} stroke="var(--line2)" />
           <text x={PL - 6} y={yOf(v) + 4} fontSize="10" fill="var(--mute)" textAnchor="end">{v}</text>
         </g>

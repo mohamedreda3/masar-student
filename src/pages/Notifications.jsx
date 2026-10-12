@@ -1,6 +1,29 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { StatsBar, SecHead, FooterStrip, Empty } from '../components.jsx';
-import { notifications } from '../data.js';
+import api from '../api/client.js';
+import { useApi, useHome } from '../api/useApi.js';
+
+/* نوع إشعار الباك اند → تبويب التصميم */
+const TYPE_TAB = { badge_earned: 'إنجاز', badge_awarded: 'إنجاز', challenge_completed: 'إنجاز', assignment_graded: 'واجبات', level_up: 'إنجاز', badge: 'إنجاز', achievement: 'إنجاز', reward: 'إنجاز', assignment: 'واجبات', task: 'واجبات', exam: 'واجبات', teacher: 'معلم', feedback: 'معلم', note: 'معلم' };
+const TYPE_ICO = { 'إنجاز': '/img/medal.png', 'واجبات': '/img/clipboard.png', 'معلم': '/img/teacher.png', 'نظام': '/img/bell.png' };
+const ago = (d) => {
+  if (!d) return '';
+  const m = Math.round((Date.now() - new Date(d)) / 60000);
+  if (m < 60) return `منذ ${Math.max(m, 1)} د`;
+  if (m < 1440) return `منذ ${Math.round(m / 60)} س`;
+  return `منذ ${Math.round(m / 1440)} يوم`;
+};
+const toItem = (n) => {
+  const type = TYPE_TAB[n.type] || 'نظام';
+  /* أين يفتح الإشعار */
+  const d = typeof n.data === 'string' ? (() => { try { return JSON.parse(n.data); } catch { return {}; } })() : (n.data || {});
+  const to = /^badge_/.test(n.type) ? '/badges'
+    : n.type === 'challenge_completed' ? '/challenges'
+    : d.assignment_id ? '/assignment?id=' + d.assignment_id
+    : n.type === 'level_up' ? '/reports' : null;
+  return { id: n.id, to, ar: n.title ?? n.message, en: n.body ?? n.message_en ?? n.title_en ?? '', type, ico: TYPE_ICO[type], t: ago(n.created_at), unread: !(n.is_read ?? n.read_at) };
+};
 import { clickSound } from '../sounds.js';
 import { showToast } from '../toast.js';
 
@@ -8,13 +31,23 @@ const TABS = ['الكل', 'واجبات', 'معلم', 'إنجاز', 'نظام'];
 
 export default function Notifications() {
   const [tab, setTab] = useState('الكل');
-  const [items, setItems] = useState(notifications);
+  const { reload: reloadHome } = useHome();
+  const nav = useNavigate();
+  const { data } = useApi(() => api.notifications(), []);
+  const [items, setItems] = useState([]);
+  useEffect(() => { if (data) setItems((data.items || []).map(toItem)); }, [data]);
+  const readOne = (n) => {
+    if (n.to) nav(n.to);
+    if (!n.unread) return;
+    setItems(it => it.map(x => (x.id === n.id ? { ...x, unread: false } : x)));
+    api.readNotification(n.id).then(reloadHome, () => {});
+  };
   const shown = items.filter(n => tab === 'الكل' || n.type === tab);
   const unread = items.filter(n => n.unread).length;
   const markAll = () => {
     clickSound();
     setItems(it => it.map(n => ({ ...n, unread: false })));
-    showToast('تم تحديد الكل كمقروء', '✅');
+    api.readAllNotifications().then(() => { reloadHome(); showToast('تم تحديد الكل كمقروء', '✅'); }, (ex) => showToast(ex.message, '⚠️'));
   };
   const clearAll = () => {
     clickSound();
@@ -56,7 +89,7 @@ export default function Notifications() {
               </div>
             )}
             {shown.map(n => (
-              <div key={n.ar} className={'notif-row' + (n.unread ? ' unread' : '')}>
+              <div key={n.id} className={'notif-row' + (n.unread ? ' unread' : '')} onClick={() => readOne(n)} style={{ cursor: n.unread || n.to ? 'pointer' : undefined }}>
                 <img src={n.ico} alt="" />
                 <div style={{ flex: 1 }}>
                   <div className="t">{n.ar}</div>

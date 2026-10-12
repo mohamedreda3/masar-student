@@ -1,7 +1,9 @@
 import { StatsBar, SecHead, FooterStrip } from '../components.jsx';
 import { teacherNotes, goals, SKILLS } from '../data.js';
+import { useStudent } from '../api/useApi.js';
 
 export default function Feedback() {
+  const student = useStudent();
   return (
     <div className="page">
       <StatsBar />
@@ -72,7 +74,7 @@ export default function Feedback() {
             </div>
             <div className="mascot">
               <img src="/img/owl.png" alt="" />
-              <div className="b">معلّموك معجبون بتقدمك يا أحمد — كل ملاحظة هي هدية تساعدك تتطور!</div>
+              <div className="b">معلّموك معجبون بتقدمك يا {student.first} — كل ملاحظة هي هدية تساعدك تتطور!</div>
             </div>
           </div>
         </div>

@@ -19,7 +19,7 @@ const CONFETTI = [
   [26, '#0891b2', 0.35, 3.1, 720], [68, '#0891b2', 0.4, 3.2, 680],
 ];
 
-function Confetti() {
+export function Confetti() {
   return (
     <div className="confetti" aria-hidden="true">
       {CONFETTI.map(([x, c, w, d, r], i) => (
@@ -53,8 +53,17 @@ export default function Result() {
   const { state } = useLocation();
   const pct = state?.pct ?? R.pct;               // النتيجة الحية من الكويز، أو الافتراضية للعرض
   const plan = adaptivePlan(pct);
+  // بعد نشاط حقيقي: «التالي» = الخطوة التالية من الباك اند (أو إعادة النشاط لو النتيجة أقل من 60٪)
+  if (state?.next) Object.assign(plan, pct < 60
+    ? { to: state.retry, label: '🔁 أعد المحاولة لتقوّي فهمك', labelEn: 'Try again', why: `نتيجتك ${pct}٪ — أعد النشاط مرة أخرى لتقوّي فهمك قبل المتابعة.` }
+    : { to: state.next, label: 'الانتقال إلى التالي ←', labelEn: 'Continue to Next', color: 'var(--brand)', why: `نتيجتك ${pct}٪ — ${pct >= 90 ? 'رائعة! ' : ''}تابع إلى خطوتك التالية في المسار.` });
+  const live = !!state && 'reward' in state;   // جاي من نشاط حقيقي — نخفي البطاقات اللي مالهاش داتا من الـAPI
+  const reward = state?.reward;                  // مكافأة الباك اند: points_earned, total_points, level_up…
+  const pts = reward ? reward.points_earned ?? 0 : R.pts;
   useEffect(() => {
-    if (pct >= 60) { winSound(); showToast(`+${R.pts} نقطة! أُضيفت لرصيدك`); }
+    if (reward?.level_up) { winSound(); showToast(`مبروك! وصلت إلى المستوى ${reward.current_level ?? reward.level ?? ''}`, '🎉'); }
+    else if (pct >= 60 && pts > 0) { winSound(); showToast(`+${pts} نقطة! أُضيفت لرصيدك`); }
+    else if (pct >= 60) winSound();
     else showToast('أكملت النشاط — نشاط الدعم بانتظارك', '💪');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -97,26 +106,26 @@ export default function Result() {
             </div>
             <div className="result-stat">
               <img src="/img/stopwatch.png" alt="" />
-              <div className="n">{R.time}</div>
+              <div className="n">{state?.time ?? R.time}</div>
               <div className="l">الوقت المستغرق</div>
               <div className="e">Time Spent</div>
             </div>
             <div className="result-stat">
               <img src="/img/clipboard.png" alt="" />
-              <div className="n" style={{ direction: 'rtl' }}>{R.correct}</div>
+              <div className="n" style={{ direction: 'rtl' }}>{state?.correct ?? R.correct}</div>
               <div className="l">إجابات صحيحة</div>
               <div className="e">Correct Answers</div>
             </div>
             <div className="result-stat">
               <img src="/img/points.png" alt="" />
-              <div className="n">+{R.pts}</div>
+              <div className="n">+{pts}</div>
               <div className="l">نقاط كسبتها</div>
               <div className="e">Points Earned</div>
             </div>
           </div>
         </div>
 
-        <div className="result-cols reveal" style={{ '--rd': '1.15s' }}>
+        {!live && <div className="result-cols reveal" style={{ '--rd': '1.15s' }}>
           <div className="card result-info">
             <div className="badges-head">
               <div>
@@ -141,11 +150,11 @@ export default function Result() {
               <ul>{R.improve.map(m => <li key={m}>👣 {m}</li>)}</ul>
             </div>
           </div>
-        </div>
+        </div>}
 
         <div className="result-cols reveal" style={{ marginTop: 26, '--rd': '1.35s' }}>
           {/* تعليق المعلم */}
-          <div className="card result-info" style={{ borderTop: '4px solid var(--pink)', display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+          {!live && <div className="card result-info" style={{ borderTop: '4px solid var(--pink)', display: 'flex', gap: 16, alignItems: 'flex-start' }}>
             <img src={R.teacher.img} alt="" style={{ width: 62, height: 62, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
               <h3 style={{ fontSize: 16 }}>💬 تعليق المعلم</h3>
@@ -153,9 +162,9 @@ export default function Result() {
               <div style={{ fontSize: 13.5, color: 'var(--ink2)', lineHeight: 2, marginTop: 8 }}>{R.teacher.note}</div>
             </div>
             <span className="chip" style={{ background: 'var(--lav-soft)', color: 'var(--brand-ink)', flexShrink: 0 }}>معلمتك 💜</span>
-          </div>
+          </div>}
           {/* إنجاز جديد عند التفوق — وتشجيع البومة عند التعثر (لا شارات على نتيجة ضعيفة) */}
-          {pct >= 90 ? (
+          {live && pct >= 90 && !reward?.level_up ? null : (live ? reward?.level_up : pct >= 90) ? (
             <div className="card result-info unlock-card">
               <div className="badges-head">
                 <div>
@@ -166,9 +175,9 @@ export default function Result() {
               <div className="unlock-body">
                 <img src="/img/shield.png" alt="" className="pop-in" style={{ '--rd': '1.6s' }} />
                 <div>
-                  <div className="t">متقن للفهم</div>
-                  <div className="e">Master of Understanding</div>
-                  <div className="d">أكملت نشاطاً بفهم ممتاز! شارة جديدة أُضيفت لمجموعتك.</div>
+                  <div className="t">{live ? `المستوى ${reward.level ?? reward.current_level}` : 'متقن للفهم'}</div>
+                  <div className="e">{live ? 'Level Up!' : 'Master of Understanding'}</div>
+                  <div className="d">{live ? `مبروك! وصلت إلى المستوى ${reward.level ?? reward.current_level} — واصل جمع النقاط.` : 'أكملت نشاطاً بفهم ممتاز! شارة جديدة أُضيفت لمجموعتك.'}</div>
                   <Link to="/badges" className="link" style={{ fontSize: 12.5 }}>شاهد شاراتك ←</Link>
                 </div>
               </div>
@@ -201,7 +210,7 @@ export default function Result() {
 
         {/* شريط الإجراءات الختامي */}
         <div className="result-actions reveal" style={{ '--rd': '1.5s' }}>
-          <Link to="/quiz/run" className="btn btn-ghost btn-col">
+          <Link to={state?.retry || '/quiz/run'} className="btn btn-ghost btn-col">
             <span>🔁 إعادة المحاولة</span>
             <span className="sub">Retry</span>
           </Link>

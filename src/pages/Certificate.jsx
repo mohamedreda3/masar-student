@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { StatsBar } from '../components.jsx';
-import { student } from '../data.js';
+import { student as mockStudent } from '../data.js';
+import { useStudent } from '../api/useApi.js';
 import { winSound } from '../sounds.js';
 
 /* معاينة الشهادة — قالب أنيق قابل للطباعة/PDF لاحقاً */
 export default function Certificate() {
+  const student = useStudent(mockStudent);
   useEffect(() => { winSound(); }, []);
   return (
     <div className="page">

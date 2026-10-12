@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { StatsBar, SecHead } from '../components.jsx';
-import { SKILLS, student } from '../data.js';
+import { SKILLS, student as mockStudent } from '../data.js';
+import { useStudent } from '../api/useApi.js';
 
 const CHECKS = [
   { skill: 'reading',   d: 'فهم الكلمات والجمل',   de: 'Understand words and sentences' },
@@ -16,6 +17,7 @@ const INFO = [
 ];
 
 export default function LevelIntro() {
+  const student = useStudent(mockStudent);
   return (
     <div className="page">
       <StatsBar />

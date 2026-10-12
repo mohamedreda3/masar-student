@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { StatsBar, Ring, FooterStrip } from '../components.jsx';
-import { SKILLS, student } from '../data.js';
+import { SKILLS, student as mockStudent } from '../data.js';
+import { useStudent } from '../api/useApi.js';
 
 /* النتيجة بصياغة إيجابية — تظهر مجموعة الطالب فقط، بلا سلّم مقارنة (قرار العميل) */
 const SKILL_RESULTS = [
@@ -11,6 +12,7 @@ const SKILL_RESULTS = [
 ];
 
 export default function LevelResult() {
+  const student = useStudent(mockStudent);
   return (
     <div className="page">
       <StatsBar />

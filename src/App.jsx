@@ -39,6 +39,11 @@ import More from './pages/More.jsx';
 import Engines from './pages/Engines.jsx';
 import TestBuilder from './pages/TestBuilder.jsx';
 import WordSearch from './pages/WordSearch.jsx';
+import Login from './pages/Login.jsx';
+import Assignment from './pages/Assignment.jsx';
+import PlayGame from './pages/PlayGame.jsx';
+import { getToken } from './api/client.js';
+import { HomeProvider } from './api/useApi.js';
 
 function Shell() {
   const { pathname } = useLocation();
@@ -48,17 +53,22 @@ function Shell() {
     if (firstNav.current) { firstNav.current = false; return; }
     swooshSound(); // سووش خفيف مع كل تنقل
   }, [pathname]);
-  const focused = ['/lesson', '/quiz/run', '/level-check/question', '/story', '/exam', '/exit-ticket'].includes(pathname)
+  if (!getToken() && pathname !== '/login') return <Navigate to="/login" replace />; // بلا توكن → شاشة الدخول
+  if (pathname === '/login') return getToken() ? <Navigate to="/" replace /> : <Login />;
+  const focused = ['/lesson', '/quiz/run', '/play', '/level-check/question', '/story', '/exam', '/exit-ticket'].includes(pathname)
     || pathname.startsWith('/activity/') || pathname.startsWith('/extra/') || pathname.startsWith('/game'); // شاشات الجلسة المركزة بلا قائمة علوية
   return (
-    <>
+    <HomeProvider>
       {!focused && <TopBar />}
       {/* مفتاح المسار يعيد تشغيل انزلاق الدخول مع كل صفحة */}
       <div className="route-fx" key={pathname}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/path" element={<Path />} />
-        <Route path="/activities" element={<Activities />} />
+        <Route path="/activities" element={<Activities mode="activities" />} />
+        <Route path="/assignment" element={<Assignment />} />
+        <Route path="/play" element={<PlayGame />} />
+        <Route path="/assignments" element={<Activities key="assignments" mode="assignments" />} />
         <Route path="/games" element={<Navigate to="/challenges" replace />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/unit" element={<Unit />} />
@@ -95,7 +105,7 @@ function Shell() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       </div>
-    </>
+    </HomeProvider>
   );
 }
 

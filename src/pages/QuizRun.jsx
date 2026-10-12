@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Logo } from '../components.jsx';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import ActivityRun from './ActivityRun.jsx';
 import { quizQuestions, SKILLS } from '../data.js';
 import { dingSound, buzzSound, winSound, playClip } from '../sounds.js';
 import { showToast } from '../toast.js';
@@ -23,7 +24,15 @@ function FocusBar() {
   );
 }
 
+/* ?lesson=&activity= → نشاط حقيقي من الباك اند، وإلا الكويز التجريبي */
 export default function QuizRun() {
+  const [qs] = useSearchParams();
+  const lesson = qs.get('lesson'), activity = qs.get('activity');
+  if (activity && (lesson || qs.get('library'))) return <ActivityRun key={lesson + '-' + activity} lessonId={lesson} activityId={activity} assignment={qs.get('assignment')} library={qs.get('library')} />;
+  return <DemoQuiz />;
+}
+
+function DemoQuiz() {
   const nav = useNavigate();
   const [i, setI] = useState(0);
   const [sel, setSel] = useState(null);      // mcq/listen: رقم الخيار

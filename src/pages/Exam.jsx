@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Logo } from '../components.jsx';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import ExamSection from './ExamSection.jsx';
 import { examSections, SKILLS, dialogueAudio } from '../data.js';
 import { dingSound, winSound, playClip } from '../sounds.js';
 
@@ -22,7 +23,15 @@ function FocusBar({ section }) {
 
 const KEYS = ['أ', 'ب', 'ج', 'د'];
 
+/* ?unit=&section= → قسم حقيقي من اختبار الوحدة، وإلا الاختبار التجريبي */
 export default function Exam() {
+  const [qs] = useSearchParams();
+  const unit = qs.get('unit'), section = qs.get('section');
+  if (unit && section) return <ExamSection key={unit + '-' + section} unitId={unit} sectionId={section} />;
+  return <DemoExam />;
+}
+
+function DemoExam() {
   const nav = useNavigate();
   const [i, setI] = useState(0);
   const [sel, setSel] = useState(null);
