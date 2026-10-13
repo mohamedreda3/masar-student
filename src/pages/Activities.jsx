@@ -14,6 +14,7 @@ import { clickSound } from '../sounds.js';
 const KIND = {
   activity: { ar: 'نشاط', en: 'Activity', color: '#0891b2', ico: '/img/clipboard.png' },
   homework: { ar: 'واجب', en: 'Homework', color: '#db2777', ico: '/img/pencil.png' },
+  paper: { ar: 'واجب ورقي', en: 'Paper Homework', color: '#b45309', ico: '/img/scroll.png' },
   exam: { ar: 'اختبار', en: 'Exam', color: '#7c3aed', ico: '/img/target.png' },
   unit_exam: { ar: 'اختبار الوحدة', en: 'Unit Exam', color: '#ea580c', ico: '/img/scroll.png' },
 };

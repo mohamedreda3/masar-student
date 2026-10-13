@@ -97,6 +97,19 @@ export const api = {
   reports:          (params = {}) => http('/reports' + qstr(params)),
   // الشارات: { summary, earned, in_progress, not_started } — تُقيَّم مع كل طلب
   badges:           () => http('/badges'),
+  // مكتبة القصص: ?lesson_id= &unit_id= &status=all|locked|not_started|reading|completed &search=
+  stories:          (params = {}) => http('/stories' + qstr(params)),
+  story:            (id) => http(`/stories/${id}`),
+  storyProgress:    (id, last_page) => http(`/stories/${id}/progress`, { method: 'POST', body: { last_page } }),
+  submitStory:      (id, answers, time_spent_seconds) => http(`/stories/${id}/submit`, { method: 'POST', body: { answers, time_spent_seconds } }),
+  // التقويم والمهام: ?month=YYYY-MM &category=homework|activity|quiz|final|lesson
+  calendar:         (params = {}) => http('/calendar' + qstr(params)),
+  // موارد الدعم والتذاكر
+  support:          (params = {}) => http('/support' + qstr(params)),
+  tickets:          (params = {}) => http('/support/tickets' + qstr(params)),   // ?to=teacher
+  newTicket:        (category, message) => http('/support/tickets', { method: 'POST', body: { category, message } }),
+  ticketMessage:    (id, message) => http(`/support/tickets/${id}/messages`, { method: 'POST', body: { message } }),
+  askTeacher:       (message) => http('/support/teacher-questions', { method: 'POST', body: { message } }),
   // التحديات والألعاب
   challenges:       (params = {}) => http('/challenges' + qstr(params)),
   challenge:        (key) => http(`/challenges/${key}`),

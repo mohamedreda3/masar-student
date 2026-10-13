@@ -2093,3 +2093,13 @@ img[src$="logo-masar.svg"]:not(.logo-plate img):not(.login-brand img) { object-f
   .nav { gap: 4px; }
   .nav-item { padding: 7px 10px; }
 }
+
+/* التقويم: حتى حدثين + «+N» داخل خانة اليوم */
+/* كل أحداث اليوم داخل الخانة (بلا +N ولا قصّ ولا تمرير) — الخانة وصف الأسبوع يكبران لاحتواء الكل */
+.cal-day:has(.cal-evs) { aspect-ratio: auto; min-height: 92px; }
+.cal-day .cal-evs { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.cal-day .cal-ev { display: flex; align-items: flex-start; gap: 5px; font-size: 10.5px; font-weight: 700; line-height: 1.45; color: var(--ink); text-align: start; cursor: pointer; border-radius: 6px; padding: 2px 3px; }
+.cal-day .cal-ev:hover { background: var(--line2); }
+.cal-day .cal-ev .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.cal-day .cal-ev .nm { flex: 1; white-space: normal; word-break: break-word; }
+.cal-day .cal-ev .tm { flex-shrink: 0; color: var(--mute); font-weight: 800; font-size: 9.5px; margin-top: 1px; }

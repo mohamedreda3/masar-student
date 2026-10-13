@@ -426,7 +426,9 @@ function SkillsTab({ c, onSkill }) {
 }
 
 const BadgeIcon = ({ b, size = 54, gray }) => (
-  <span style={{ fontSize: size * 0.7, width: size, height: size, display: 'grid', placeItems: 'center', margin: '0 auto', filter: gray ? 'grayscale(1)' : undefined, opacity: gray ? 0.55 : 1 }}>{b.icon || '🏅'}</span>
+  b.image
+    ? <img loading="lazy" decoding="async" src={b.image} alt="" style={{ width: size, height: size, objectFit: 'contain', display: 'block', margin: '0 auto', filter: gray ? 'grayscale(1)' : undefined, opacity: gray ? 0.55 : 1 }} />
+    : <span style={{ fontSize: size * 0.7, width: size, height: size, display: 'grid', placeItems: 'center', margin: '0 auto', filter: gray ? 'grayscale(1)' : undefined, opacity: gray ? 0.55 : 1 }}>{b.icon || '🏅'}</span>
 );
 
 function AchievementsTab({ c }) {
@@ -436,10 +438,10 @@ function AchievementsTab({ c }) {
       {!c.earned_badges?.length && <Empty t="لم تحقق شارات بعد — أنت قريب!" e="No badges yet" />}
       <div className="earned-grid">
         {(c.earned_badges || []).map(b => (
-          <div className="earned-card" key={b.key}>
+          <div className="earned-card" key={b.id ?? b.key}>
             <BadgeIcon b={b} />
-            <div className="t">{b.title}</div>
-            <div className="e">{b.title_en}</div>
+            <div className="t">{b.name ?? b.title}</div>
+            <div className="e">{b.name_en ?? b.title_en}</div>
             <div className="d">{fmtDate(b.earned_at)}</div>
           </div>
         ))}
@@ -448,13 +450,13 @@ function AchievementsTab({ c }) {
         <SecHead ico="/img/star.png" ar="شارات قيد التقدم" en="In Progress" />
         <div className="wip-grid">
           {c.in_progress_badges.map(b => (
-            <div className="wip-card" key={b.key}>
+            <div className="wip-card" key={b.id ?? b.key}>
               <div className="head">
                 <BadgeIcon b={b} size={46} />
-                <div><h4>{b.title}</h4><div className="en">{b.rule}</div></div>
+                <div><h4>{b.name ?? b.title}</h4><div className="en">{b.description ?? b.rule}</div></div>
               </div>
-              <div className="pct">أنجزت {b.progress_percentage}٪ من الشرط</div>
-              <div className="bar thin"><i style={{ width: b.progress_percentage + '%' }} /></div>
+              <div className="pct">أنجزت {Math.round(b.progress?.percentage ?? b.progress_percentage ?? 0)}٪ من الشرط{b.progress?.target != null ? ` · ${b.progress.current ?? 0}${b.progress.unit || ''} / ${b.progress.target}${b.progress.unit || ''}` : ''}</div>
+              <div className="bar thin"><i style={{ width: (b.progress?.percentage ?? b.progress_percentage ?? 0) + '%', background: b.color || undefined }} /></div>
             </div>
           ))}
         </div>
@@ -463,10 +465,10 @@ function AchievementsTab({ c }) {
         <SecHead ico="/img/shield.png" ar="شارات مقفلة" en="Locked" />
         <div className="wip-grid">
           {c.locked_badges.map(b => (
-            <div className="wip-card" key={b.key} style={{ opacity: 0.75 }}>
+            <div className="wip-card" key={b.id ?? b.key} style={{ opacity: 0.75 }}>
               <div className="head">
                 <BadgeIcon b={b} size={46} gray />
-                <div><h4>{b.title}</h4><div className="en">🔒 {b.rule}</div></div>
+                <div><h4>{b.name ?? b.title}</h4><div className="en">🔒 {b.description ?? b.rule}</div></div>
               </div>
             </div>
           ))}
@@ -597,10 +599,10 @@ export default function Reports() {
                 {!sb.badges?.length && <Empty t="لا شارات بعد" e="No badges yet" />}
                 <div className="badges-grid">
                   {(sb.badges || []).map(b => (
-                    <div className="badge-item" key={b.key}>
+                    <div className="badge-item" key={b.id ?? b.key}>
                       <BadgeIcon b={b} size={48} />
-                      <div className="t">{b.title}</div>
-                      <div className="e">{b.title_en}</div>
+                      <div className="t">{b.name ?? b.title}</div>
+                      <div className="e">{b.name_en ?? b.title_en}</div>
                     </div>
                   ))}
                 </div>

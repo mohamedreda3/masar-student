@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Logo } from '../components.jsx';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import StoryReader from './StoryReader.jsx';
 import { storyPages } from '../data.js';
 import { playClip } from '../sounds.js';
 
@@ -22,7 +23,14 @@ function FocusBar() {
 
 const SIZES = { 'A-': 17, 'A': 20, 'A+': 24 };
 
+/* ?id= → قصة حقيقية من الباك اند، وإلا القصة التجريبية */
 export default function Story() {
+  const [qs] = useSearchParams();
+  const id = qs.get('id');
+  return id ? <StoryReader key={id} id={id} /> : <DemoStory />;
+}
+
+function DemoStory() {
   const nav = useNavigate();
   const [p, setP] = useState(0);
   const [speed, setSpeed] = useState('1.0x');

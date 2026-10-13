@@ -4,11 +4,28 @@ import { StatsBar, SecHead, Empty, FooterStrip } from '../components.jsx';
 import api from '../api/client.js';
 import { useApi, useHome, activityLink } from '../api/useApi.js';
 import QuestionBody, { realImg, isAnswered } from '../QuestionBody.jsx';
+import AssignmentResult from './AssignmentResult.jsx';
 import { clickSound, winSound } from '../sounds.js';
 import { showToast } from '../toast.js';
 
 /* تكليف من المعلم — GET /assignments/:id
    بدء (start) → حل أنشطته (activities/:id?lesson_id=) → تسليم (submit) */
+
+/* ضغط صورة كبيرة (> 1.5MB) قبل الرفع — وإلا تُرفع كما هي */
+async function compressImage(file) {
+  if (!file.type.startsWith('image/') || file.size < 1.5 * 1024 * 1024 || file.type === 'image/gif') return file;
+  try {
+    const bmp = await createImageBitmap(file);
+    const k = Math.min(1, 1800 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.82));
+    return blob && blob.size < file.size ? new File([blob], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : file;
+  } catch { return file; }
+}
+const fmtSize = (b) => (b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB');
+const FILE_ICO = (m = '') => (m.includes('pdf') ? '📕' : m.startsWith('audio') ? '🎧' : m.startsWith('video') ? '🎬' : /word|msword|document/.test(m) ? '📘' : '📄');
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleString('ar-EG', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '');
 const ACT_ST = { completed: { ar: 'مكتملة', cta: 'راجع' }, in_progress: { ar: 'جارية', cta: 'تابع' } };
@@ -36,7 +53,9 @@ export default function Assignment() {
   const [answers, setAnswers] = useState({});   // question_id → answer
   const [files, setFiles] = useState([]);       // حتى 10 ملفات
   const [note, setNote] = useState('');
-  const [startQs, setStartQs] = useState(null);  // الأسئلة الراجعة من start (للتكليفات المؤقتة)
+  const [startQs, setStartQs] = useState(null);
+  const [startAtt, setStartAtt] = useState(null);   // مرفقات الواجب الراجعة من start
+  const [zoom, setZoom] = useState(null);            // صورة مفتوحة بملء الشاشة  // الأسئلة الراجعة من start (للتكليفات المؤقتة)
   if (!id) return <Navigate to="/assignments" replace />;
 
   if (error) return (
@@ -54,13 +73,19 @@ export default function Assignment() {
   const isExam = !!A.is_exam;
   const W = isExam ? 'الاختبار' : 'التكليف';                 // كلمة الشاشة
   const sub = A.submission;
-  const submitted = sub && ['submitted', 'graded'].includes(sub.status); // محاولة مفتوحة (in_progress) ليست تسليماً
+  const submitted = (sub && ['submitted', 'graded'].includes(sub.status)) || ['waiting_for_teacher', 'hidden_until_due', 'graded'].includes(A.result_state); // محاولة مفتوحة (in_progress) ليست تسليماً
+  const graded = A.result_state === 'graded' && A.result;
+  const SUBX = A.submission || A.attempts?.[0] || {};       // بيانات التسليم (أو آخر محاولة)   // نتيجة التصحيح الكاملة (أفضل محاولة مصحَّحة)
   const backTab = A.type === 'activity' ? '/activities' : '/assignments';
   const unitExam = A.content?.unit_exam;
   // اختبار الوحدة يُحل من شاشاته: open_api = /api/student/path/units/:unitId/exam
   const unitExamId = unitExam && (unitExam.unit_id ?? unitExam.unit?.id ?? (unitExam.open_api || '').match(/units\/(\d+)/)?.[1]);
   const questions = startQs?.length ? startQs : (A.content?.questions || []);
-  const fileRequired = (A.settings?.submission_type || A.submission_type) === 'file_upload';
+  const subType = A.settings?.submission_type || A.submission_type;
+  const isPaper = A.type === 'paper' || subType === 'paper';
+  const fileRequired = subType === 'file_upload' || isPaper || !!A.settings?.files_required;
+  const maxFiles = A.settings?.max_files || 10;
+  const attachments = startAtt || A.content?.attachments || [];
   // المرفقات: لو التسليم ليس تفاعلياً فقط أو فيه أنواع ملفات مقبولة
   const allowFiles = fileRequired || (A.submission_type && A.submission_type !== 'interactive') || (A.settings?.accepted_files || []).length > 0;
   const ACCEPT = { image: 'image/*', pdf: '.pdf,application/pdf', audio: 'audio/*', video: 'video/*', word: '.doc,.docx', doc: '.doc,.docx', docx: '.docx' };
@@ -80,14 +105,15 @@ export default function Assignment() {
     catch (ex) { showToast(ex.message, '⚠️'); }
     setBusy(false);
   };
-  const start = () => run(async () => { const r = await api.startAssignment(id); if (r?.questions?.length) setStartQs(r.questions); }, `بدأت ${W} — بالتوفيق!`);
+  const start = () => run(async () => { const r = await api.startAssignment(id); if (r?.questions?.length) setStartQs(r.questions); if (r?.attachments?.length) setStartAtt(r.attachments); }, `بدأت ${W} — بالتوفيق!`);
   const submit = (auto) => run(async () => {
-    if (fileRequired && !files.length && !auto) throw new Error('ارفع ملف الإجابة أولاً');
+    if (fileRequired && !files.length && !auto) throw new Error(isPaper ? 'ارفع صور أو ملفات حلك الورقي أولاً' : 'ارفع ملف الإجابة أولاً');
+    if (!auto && !window.confirm('لن تتمكن من التعديل بعد التسليم — هل تريد التسليم الآن؟')) throw new Error('لم يتم التسليم');
     if (!auto && unanswered && !window.confirm(`لم تُجب عن ${unanswered} سؤال — هل تريد التسليم؟`)) throw new Error('أكمل الإجابات ثم سلّم');
     const ans = questions.map(q => ({ question_id: q.id, answer: answers[q.id] ?? q.saved_answer ?? null })).filter(a => a.answer !== null && a.answer !== undefined);
     const spent = A.current_attempt?.started_at ? Math.round((Date.now() - new Date(A.current_attempt.started_at)) / 1000) : undefined;
     const r = await api.submitAssignment(id, { answers: ans, files, note: note.trim(), time_spent_seconds: spent });
-    setFiles([]); setNote(''); setStartQs(null);
+    setFiles([]); setNote(''); setStartQs(null); setStartAtt(null);
     winSound();
     if (r?.waiting_for_teacher) showToast('تم التسليم — بانتظار تصحيح معلمك', '⏳');
     else if (r?.submission?.score != null) showToast(`درجتك: ${r.submission.score} من ${r.submission.total_grade}`, '🎯');
@@ -110,6 +136,7 @@ export default function Assignment() {
             <h1 style={{ marginTop: 12 }}>{A.title}</h1>
             {A.teacher?.name && <div className="en-sub">أ. {A.teacher.name}</div>}
             <div className="unit-meta-chips" style={{ marginTop: 14 }}>
+              {isPaper && <span className="chip" style={{ background: 'var(--gold-soft)', color: 'var(--ink)' }}>📝 {A.type_label || 'واجب ورقي'}</span>}
               <span className="chip">{A.status_label}</span>
               {A.due_at && <span className="chip">آخر موعد: {fmtDate(A.due_at)}</span>}
               {A.duration_minutes && <span className="chip">{A.duration_minutes} دقيقة</span>}
@@ -124,10 +151,10 @@ export default function Assignment() {
               <div className="explain-box no" style={{ marginTop: 14 }}><div><span className="h">غير متاح</span>{A.blocked_reason}</div></div>
             )}
             <div className="hero-actions">
-              {needsStart && !unitExam && <button className="btn btn-primary btn-col" disabled={busy} onClick={start}><span>🚀 ابدأ {W}</span><span className="sub">Start</span></button>}
+              {needsStart && !unitExam && <button className="btn btn-primary btn-col" disabled={busy} onClick={start}><span>{graded ? '🔁 إعادة المحاولة' : `🚀 ابدأ ${W}`}</span><span className="sub">{graded ? 'Retry' : 'Start'}</span></button>}
               {!finished && !unitExam && (started || !needsStart) && (
-                <button className="btn btn-primary btn-col" disabled={busy || actsLeft > 0 || !A.can_submit} onClick={() => submit(false)}
-                  style={{ opacity: actsLeft > 0 || !A.can_submit ? 0.55 : 1 }} title={actsLeft > 0 ? 'أكمل كل الأنشطة أولاً' : A.blocked_reason || ''}>
+                <button className="btn btn-primary btn-col" disabled={busy || actsLeft > 0 || !A.can_submit || (fileRequired && !files.length) || (isPaper && unanswered > 0)} onClick={() => submit(false)}
+                  style={{ opacity: actsLeft > 0 || !A.can_submit || (fileRequired && !files.length) || (isPaper && unanswered > 0) ? 0.55 : 1 }} title={actsLeft > 0 ? 'أكمل كل الأنشطة أولاً' : fileRequired && !files.length ? 'ارفع ملفاً واحداً على الأقل' : isPaper && unanswered > 0 ? 'أجب عن كل الأسئلة' : A.blocked_reason || ''}>
                   <span>✓ سلّم {W}</span><span className="sub">{acts.length ? `أنجزت ${doneActs} من ${acts.length}` : `أجبت ${answeredQs} من ${questions.length}`}</span>
                 </button>
               )}
@@ -145,18 +172,26 @@ export default function Assignment() {
         </div>
 
         {/* نتيجة التسليم */}
-        {submitted && (
+        {graded && <AssignmentResult r={A.result} W={W} />}
+
+        {submitted && !graded && (
           <div className={'explain-box ' + (A.status === 'graded' ? 'ok' : '')} style={{ marginTop: 20 }}>
             <img src="/img/owl.png" alt="" />
             <div>
               <span className="h">
-                {A.submission.result_hidden_until ? `تم التسليم — النتيجة تظهر في ${fmtDate(A.submission.result_hidden_until)}`
-                  : A.status === 'graded' ? `تم التصحيح — ${A.submission.score ?? '—'} من ${A.total_grade}${A.submission.percentage != null ? ` (${Math.round(A.submission.percentage)}٪)` : ''}${A.submission.passed === true ? ' · ناجح ✓' : A.submission.passed === false ? ' · لم تنجح' : ''}`
+                {(A.result_hidden_until ?? SUBX.result_hidden_until) ? `تم التسليم — النتيجة تظهر في ${fmtDate((A.result_hidden_until ?? SUBX.result_hidden_until))}`
+                  : A.status === 'graded' ? `تم التصحيح — ${SUBX.score ?? '—'} من ${A.total_grade}${SUBX.percentage != null ? ` (${Math.round(SUBX.percentage)}٪)` : ''}${SUBX.passed === true ? ' · ناجح ✓' : SUBX.passed === false ? ' · لم تنجح' : ''}`
                   : 'تم التسليم — بانتظار تصحيح معلمك'}
               </span>
-              {A.submission.feedback && <div>💬 {A.submission.feedback}</div>}
-              {A.submission.submitted_at && <div style={{ fontSize: 12, color: 'var(--mute)' }}>سُلِّم في {fmtDate(A.submission.submitted_at)}{A.submission.is_late ? ' · متأخر' : ''}</div>}
-              {A.submission.files?.length > 0 && <div style={{ marginTop: 6 }}>{A.submission.files.map(f => <a key={f.url} href={f.url} target="_blank" rel="noreferrer" className="chip" style={{ marginInlineEnd: 6 }}>📎 {f.name}</a>)}</div>}
+              {SUBX.feedback && <div>💬 {SUBX.feedback}</div>}
+              {SUBX.submitted_at && <div style={{ fontSize: 12, color: 'var(--mute)' }}>سُلِّم في {fmtDate(SUBX.submitted_at)}{SUBX.is_late ? ' · متأخر' : ''}</div>}
+              {SUBX.files?.length > 0 && (
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+                  {SUBX.files.map(f => (f.mime_type || '').startsWith('image/')
+                    ? <img key={f.url} src={f.url} alt={f.name} onClick={() => setZoom(f)} style={{ width: 84, height: 84, objectFit: 'cover', borderRadius: 10, cursor: 'zoom-in', border: '1px solid var(--line)' }} />
+                    : <a key={f.url} href={f.url} target="_blank" rel="noreferrer" className="chip">{FILE_ICO(f.mime_type)} {f.name}</a>)}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -178,6 +213,28 @@ export default function Assignment() {
             ))}
           </>
         )}
+
+        {/* ورقة الواجب من المعلم: صور (عرض بملء الشاشة) + ملفات (فتح / تحميل) */}
+        {attachments.length > 0 && <>
+          <SecHead ico="/img/scroll.png" ar={`ورقة ${W} (${attachments.length})`} en="Homework Sheet" />
+          <div className="card" style={{ padding: '18px 20px' }}>
+            {attachments.some(a => a.is_image) && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+                {attachments.filter(a => a.is_image).map(a => (
+                  <img key={a.id ?? a.url} src={a.url} alt={a.name} onClick={() => { clickSound(); setZoom(a); }}
+                    style={{ width: '100%', aspectRatio: '3 / 4', objectFit: 'cover', borderRadius: 12, border: '1px solid var(--line)', cursor: 'zoom-in' }} />
+                ))}
+              </div>
+            )}
+            {attachments.filter(a => !a.is_image).map(a => (
+              <div key={a.id ?? a.url} className="print-row" style={{ marginTop: 10 }}>
+                <span style={{ fontSize: 30 }}>{FILE_ICO(a.mime_type)}</span>
+                <div><div className="t">{a.name}</div><div className="d">{a.size ? fmtSize(a.size) : ''}</div></div>
+                <a href={a.url} target="_blank" rel="noreferrer" download><button className="btn-sm">⬇ فتح / تحميل</button></a>
+              </div>
+            ))}
+          </div>
+        </>}
 
         {unitExam && (
           <div className="card next-card" style={{ borderTopColor: 'var(--gold)', marginTop: 22 }}>
@@ -216,7 +273,7 @@ export default function Assignment() {
         })}
 
         {/* أسئلة التكليف المباشرة — تُصحَّح آلياً، والنصية/المقالية ينتظرها المعلم */}
-        {(questions.length > 0 || (A.content?.questions_hidden_until_start && !submitted) || reviewAns.length > 0) && (
+        {!graded && (questions.length > 0 || (A.content?.questions_hidden_until_start && !submitted) || reviewAns.length > 0) && (
           <>
             <SecHead ico="/img/target2.png" ar={submitted ? `مراجعة إجاباتك (${A.content?.questions_count ?? reviewAns.length})` : `أسئلة ${W} (${A.content?.questions_count ?? questions.length})`} en={submitted ? 'Your Answers' : isExam ? 'Exam Questions' : 'Questions'} />
             <div className="card activity-card">
@@ -225,9 +282,14 @@ export default function Assignment() {
               {!questions.length && reviewAns.map((r, i) => (
                 <div key={r.question_id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderTop: i ? '1px dashed var(--line)' : 0 }}>
                   <span style={{ fontSize: 22 }}>{r.is_correct === true ? '✅' : r.is_correct === false ? '❌' : '⏳'}</span>
-                  <span style={{ flex: 1, fontWeight: 800 }}>السؤال {i + 1}</span>
+                  <span style={{ flex: 1, fontWeight: 800 }}>
+                    السؤال {i + 1}
+                    {/* إجابتك النصية (الأرقام = معرّف خيار، لا تُعرض) */}
+                    {typeof r.answer === 'string' && r.answer.trim() && !['true', 'false'].includes(r.answer) && <span style={{ display: 'block', fontWeight: 600, fontSize: 13, color: 'var(--ink2)' }}>إجابتك: {r.answer}</span>}
+                    {['true', 'false'].includes(r.answer) && <span style={{ display: 'block', fontWeight: 600, fontSize: 13, color: 'var(--ink2)' }}>إجابتك: {r.answer === 'true' ? 'صح' : 'خطأ'}</span>}
+                  </span>
                   <span style={{ fontWeight: 900, color: r.is_correct === true ? 'var(--green-deep)' : r.is_correct === false ? 'var(--danger)' : 'var(--gold)' }}>
-                    {r.is_correct === null ? 'بانتظار المعلم' : `${r.points} / ${r.max_points}`}
+                    {r.points != null && r.max_points != null ? `${r.points} / ${r.max_points}` : 'بانتظار تصحيح المعلم'}
                   </span>
                 </div>
               ))}
@@ -237,7 +299,7 @@ export default function Assignment() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--mute)' }}>السؤال {qi + 1}{q.points ? ` · ${q.points} درجة` : ''}{q.auto_graded === false ? ' · يصحّحه المعلم' : ''}</span>
                     {ansOf(q.id) && <span style={{ fontWeight: 900, color: ansOf(q.id).is_correct ? 'var(--green-deep)' : ansOf(q.id).is_correct === false ? 'var(--danger)' : 'var(--gold)' }}>
-                      {ansOf(q.id).is_correct === true ? '✓ صحيحة' : ansOf(q.id).is_correct === false ? '✗ خاطئة' : '⏳ بانتظار المعلم'} · {ansOf(q.id).points}/{ansOf(q.id).max_points}</span>}
+                      {ansOf(q.id).is_correct === true ? '✓ صحيحة' : ansOf(q.id).is_correct === false ? '✗ خاطئة' : '⏳ بانتظار المعلم'}{ansOf(q.id).points != null && ansOf(q.id).max_points != null ? ` · ${ansOf(q.id).points}/${ansOf(q.id).max_points}` : ''}</span>}
                     {q.hint && !finished && <button className="hint-btn" onClick={() => showToast(q.hint, '💡')}>💡 تلميح</button>}
                   </div>
                   <QuestionBody q={q} value={answers[q.id] ?? ansOf(q.id)?.answer ?? q.saved_answer ?? undefined} readOnly={finished || !started}
@@ -251,20 +313,49 @@ export default function Assignment() {
         {/* المرفقات + الملاحظة — حتى 10 ملفات (صورة / PDF / صوت / فيديو / Word) */}
         {!finished && (allowFiles || acts.length + questions.length > 0) && (
           <>
-            <SecHead ico="/img/scroll.png" ar={allowFiles ? 'المرفقات والملاحظة' : 'ملاحظة لمعلمك'} en={allowFiles ? 'Files & Note' : 'Note'} />
+            <SecHead ico="/img/scroll.png" ar={isPaper ? 'ارفع حلّك الورقي' : allowFiles ? 'المرفقات والملاحظة' : 'ملاحظة لمعلمك'} en={isPaper ? 'Upload your paper solution (required)' : allowFiles ? 'Files & Note' : 'Note'} />
             <div className="card" style={{ padding: '22px 26px' }}>
               {allowFiles && (
                 <>
-                  <label className="btn btn-ghost" style={{ cursor: files.length >= 10 ? 'not-allowed' : 'pointer', opacity: files.length >= 10 ? 0.5 : 1 }}>
-                    📎 أضف ملفات ({files.length}/10)
-                    <input type="file" multiple hidden accept={accept} disabled={files.length >= 10}
-                      onChange={e => { const add = [...e.target.files]; e.target.value = ''; setFiles(f => [...f, ...add].slice(0, 10)); if (files.length + add.length > 10) showToast('الحد الأقصى 10 ملفات', '⚠️'); }} />
-                  </label>
-                  <div style={{ fontSize: 12, color: 'var(--mute)', marginTop: 8 }}>صورة · PDF · صوت · فيديو · Word — الملفات والإجابات الكتابية يصحّحها معلمك</div>
-                  {files.map((f, i) => (
+                  {(() => {
+                    const full = files.length >= maxFiles;
+                    const addFiles = async (list) => {
+                      const add = await Promise.all([...list].map(compressImage));
+                      setFiles(f => [...f, ...add].slice(0, maxFiles));
+                      if (files.length + add.length > maxFiles) showToast(`الحد الأقصى ${maxFiles} ملفات`, '⚠️');
+                    };
+                    return (
+                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                        <label className="btn btn-primary" style={{ cursor: full ? 'not-allowed' : 'pointer', opacity: full ? 0.5 : 1 }}>
+                          📷 التقط صورة
+                          <input type="file" accept="image/*" capture="environment" hidden disabled={full} onChange={e => { const l = e.target.files; addFiles(l); e.target.value = ''; }} />
+                        </label>
+                        <label className="btn btn-ghost" style={{ cursor: full ? 'not-allowed' : 'pointer', opacity: full ? 0.5 : 1 }}>
+                          📎 اختر ملفات ({files.length}/{maxFiles})
+                          <input type="file" multiple hidden accept={accept} disabled={full} onChange={e => { const l = e.target.files; addFiles(l); e.target.value = ''; }} />
+                        </label>
+                      </div>
+                    );
+                  })()}
+                  <div style={{ fontSize: 12, color: 'var(--mute)', marginTop: 8 }}>
+                    {isPaper ? 'حلّ الورقة على الورق، ثم صوّرها أو امسحها وارفعها هنا — ملف واحد على الأقل مطلوب.' : 'صورة · PDF · صوت · فيديو · Word — الملفات والإجابات الكتابية يصحّحها معلمك'}
+                  </div>
+                  {files.some(f => f.type.startsWith('image/')) && (
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 12 }}>
+                      {files.map((f, i) => f.type.startsWith('image/') && (
+                        <div key={i} style={{ position: 'relative' }}>
+                          <img src={URL.createObjectURL(f)} alt="" style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--line)' }} />
+                          <button onClick={() => setFiles(fs => fs.filter((_, j) => j !== i))} aria-label="حذف"
+                            style={{ position: 'absolute', top: -8, insetInlineEnd: -8, width: 26, height: 26, borderRadius: '50%', background: 'var(--danger)', color: '#fff', fontWeight: 900 }}>×</button>
+                          <div style={{ fontSize: 10.5, color: 'var(--mute)', textAlign: 'center' }}>{fmtSize(f.size)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {files.map((f, i) => !f.type.startsWith('image/') && (
                     <div key={i} className="print-row" style={{ marginTop: 10 }}>
-                      <img src={f.type.startsWith('image/') ? URL.createObjectURL(f) : '/img/scroll.png'} alt="" />
-                      <div><div className="t">{f.name}</div><div className="d">{(f.size / 1024 / 1024).toFixed(2)} MB</div></div>
+                      <span style={{ fontSize: 28 }}>{FILE_ICO(f.type)}</span>
+                      <div><div className="t">{f.name}</div><div className="d">{fmtSize(f.size)}</div></div>
                       <button className="btn-sm" onClick={() => setFiles(fs => fs.filter((_, j) => j !== i))}>✕ حذف</button>
                     </div>
                   ))}
@@ -276,6 +367,12 @@ export default function Assignment() {
           </>
         )}
       </div>
+      {zoom && (
+        <div className="modal-overlay" onClick={() => setZoom(null)} role="dialog" aria-modal="true" style={{ cursor: 'zoom-out' }}>
+          <img src={zoom.url} alt={zoom.name} onClick={(e) => { e.stopPropagation(); e.currentTarget.style.transform = e.currentTarget.style.transform ? '' : 'scale(1.8)'; }}
+            style={{ maxWidth: '94vw', maxHeight: '90vh', objectFit: 'contain', borderRadius: 12, background: '#fff', transition: 'transform .25s', cursor: 'zoom-in' }} />
+        </div>
+      )}
       <FooterStrip ar="أنجز تكليفات معلمك في موعدها – كل خطوة تقرّبك من هدفك" en="Finish your teacher's assignments on time!" />
     </div>
   );

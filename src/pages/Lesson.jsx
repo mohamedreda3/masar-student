@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Logo, Empty } from '../components.jsx';
+import { Logo, Empty, SecHead } from '../components.jsx';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api/client.js';
 import { useApi, useHome, activityLink, ST } from '../api/useApi.js';
 import { playClip, dingSound, buzzSound, clickSound } from '../sounds.js';
 import { showToast } from '../toast.js';
 import ActivityLibrary from './ActivityLibrary.jsx';
+import { StoryCard } from './Library.jsx';
 
 /* صفحة الدرس (المحتوى الدراسي) — GET /path/lessons/:id/page
    journey = شريط الخطوات · gallery/passage = النص · task = صح/خطأ · self_check · mascot · helpers */
@@ -392,6 +393,13 @@ export default function Lesson() {
             <div className="col">
               <Activity key={P.lesson.id} P={P} />
               <ToolkitBar P={P} />
+              {/* قصص الدرس (GET /path/lessons/:id/page → stories) */}
+              {P.stories?.length > 0 && <>
+                <SecHead ico="/img/bookOpenGold.png" ar={`قصص الدرس (${P.stories.length})`} en="Lesson Stories" link="مكتبة القصص" to="/library" />
+                <div className="stations-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
+                  {P.stories.map(s => <StoryCard key={s.id} s={s} />)}
+                </div>
+              </>}
             </div>
             <Tools P={P} />
           </div>

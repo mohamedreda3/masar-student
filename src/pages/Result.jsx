@@ -53,10 +53,19 @@ export default function Result() {
   const { state } = useLocation();
   const pct = state?.pct ?? R.pct;               // النتيجة الحية من الكويز، أو الافتراضية للعرض
   const plan = adaptivePlan(pct);
-  // بعد نشاط حقيقي: «التالي» = الخطوة التالية من الباك اند (أو إعادة النشاط لو النتيجة أقل من 60٪)
-  if (state?.next) Object.assign(plan, pct < 60
-    ? { to: state.retry, label: '🔁 أعد المحاولة لتقوّي فهمك', labelEn: 'Try again', why: `نتيجتك ${pct}٪ — أعد النشاط مرة أخرى لتقوّي فهمك قبل المتابعة.` }
-    : { to: state.next, label: 'الانتقال إلى التالي ←', labelEn: 'Continue to Next', color: 'var(--brand)', why: `نتيجتك ${pct}٪ — ${pct >= 90 ? 'رائعة! ' : ''}تابع إلى خطوتك التالية في المسار.` });
+  // بعد نشاط حقيقي: الزر الرئيسي دائماً «النشاط التالي» (next_step من الباك اند) — وإعادة المحاولة زر مستقل بجانبه
+  if (state?.next) Object.assign(plan, {
+    to: state.next, label: 'النشاط التالي ←', labelEn: 'Next Activity', color: 'var(--brand)',
+    why: pct < 60
+      ? `نتيجتك ${pct}٪ — يمكنك إعادة المحاولة لتقوّي فهمك، أو المتابعة إلى النشاط التالي.`
+      : `نتيجتك ${pct}٪ — ${pct >= 90 ? 'رائعة! ' : ''}تابع إلى خطوتك التالية في المسار.`,
+  });
+  const story = state?.story;                    // نتيجة قصة (POST /stories/:id/submit)
+  if (story) Object.assign(plan, {
+    verdict: story.rating?.label || plan.verdict, verdictEn: story.rating?.label_en || plan.verdictEn,
+    ...(state.next ? { label: 'القصة التالية ←', labelEn: 'Next Story', color: 'var(--brand)', to: state.next, why: `نتيجتك ${pct}٪ — تابع إلى القصة التالية في مكتبتك.` }
+      : { label: 'العودة لمكتبة القصص ←', labelEn: 'Story Library', color: 'var(--brand)', to: '/library', why: `نتيجتك ${pct}٪ — اختر قصتك التالية من المكتبة.` }),
+  });
   const live = !!state && 'reward' in state;   // جاي من نشاط حقيقي — نخفي البطاقات اللي مالهاش داتا من الـAPI
   const reward = state?.reward;                  // مكافأة الباك اند: points_earned, total_points, level_up…
   const pts = reward ? reward.points_earned ?? 0 : R.pts;
@@ -79,8 +88,8 @@ export default function Result() {
           <div className="result-top">
             <img className="celebrate pop-in" src="/img/wellDone.png" alt="" style={{ '--rd': '0.1s' }} />
             <div className="mid">
-              <h1 className="reveal" style={{ '--rd': '0.35s' }}>أحسنت! لقد أكملت النشاط</h1>
-              <div className="en reveal" style={{ '--rd': '0.45s' }}>Great job! You completed the activity</div>
+              <h1 className="reveal" style={{ '--rd': '0.35s' }}>{story ? 'أحسنت! لقد أكملت القصة' : 'أحسنت! لقد أكملت النشاط'}</h1>
+              <div className="en reveal" style={{ '--rd': '0.45s' }}>{story ? 'Great job! You finished the story' : 'Great job! You completed the activity'}</div>
               <div className="reveal" style={{ '--rd': '0.55s', fontWeight: 800, color: 'var(--ink2)', marginTop: 8 }}>
                 التغذية الراجعة <span style={{ fontSize: 11, color: 'var(--mute)' }}>· Feedback</span>
               </div>
@@ -93,7 +102,7 @@ export default function Result() {
                   <div style={{ fontSize: 9, fontWeight: 400 }}>{plan.verdictEn}</div>
                 </div>
               </Ring>
-              <div className="ring-stars reveal" style={{ '--rd': '0.7s' }}>⭐⭐⭐</div>
+              <div className="ring-stars reveal" style={{ '--rd': '0.7s' }}>{story ? '⭐'.repeat(story.rating?.stars ?? 0) + '☆'.repeat(Math.max(0, 3 - (story.rating?.stars ?? 0))) : '⭐⭐⭐'}</div>
             </div>
           </div>
 
@@ -124,6 +133,29 @@ export default function Result() {
             </div>
           </div>
         </div>
+
+        {story && !story.no_questions && (story.did_well?.length > 0 || story.to_improve?.length > 0) && (
+          <div className="result-cols reveal" style={{ '--rd': '1.15s' }}>
+            <div className="card result-info">
+              <div className="badges-head">
+                <div><h3>✅ ما الذي أتقنته اليوم</h3><div className="en">What you did well</div></div>
+                <img className="side-ill" src="/img/clipboard.png" alt="" />
+              </div>
+              <div className="sw-box good" style={{ marginTop: 14 }}>
+                <ul>{story.did_well?.length ? story.did_well.map(m => <li key={m.key}>✔ {m.label} — {m.correct}/{m.total}</li>) : <li>واصل — ستظهر هنا نقاط قوتك</li>}</ul>
+              </div>
+            </div>
+            <div className="card result-info">
+              <div className="badges-head">
+                <div><h3>⬆ خطواتك التالية للتحسين</h3><div className="en">Your next improvement steps</div></div>
+                <img className="side-ill" src="/img/target2.png" alt="" />
+              </div>
+              <div className="sw-box bad" style={{ marginTop: 14, background: 'var(--gold-soft)' }}>
+                <ul>{story.to_improve?.length ? story.to_improve.map(m => <li key={m.key}>👣 {m.label} — {m.correct}/{m.total}</li>) : <li>رائع! لا شيء يحتاج تحسيناً الآن 🌟</li>}</ul>
+              </div>
+            </div>
+          </div>
+        )}
 
         {!live && <div className="result-cols reveal" style={{ '--rd': '1.15s' }}>
           <div className="card result-info">
@@ -194,7 +226,7 @@ export default function Result() {
                 <img src="/img/owl.png" alt="" />
                 <div className="b">
                   {pct < 60
-                    ? 'التعثر جزء من التعلم! نشاط الدعم سيقوّيك — وعند إعادة المحاولة سترى الفرق بنفسك.'
+                    ? (live ? 'التعثر جزء من التعلم! أعد المحاولة وسترى الفرق بنفسك — أو تابع وارجع لها لاحقاً.' : 'التعثر جزء من التعلم! نشاط الدعم سيقوّيك — وعند إعادة المحاولة سترى الفرق بنفسك.')
                     : 'اقتربت من الممتاز! راجع «خطوتك التالية» وأعد المحاولة لتفتح شارة الإتقان.'}
                 </div>
               </div>
@@ -211,10 +243,10 @@ export default function Result() {
         {/* شريط الإجراءات الختامي */}
         <div className="result-actions reveal" style={{ '--rd': '1.5s' }}>
           <Link to={state?.retry || '/quiz/run'} className="btn btn-ghost btn-col">
-            <span>🔁 إعادة المحاولة</span>
+            <span>{story ? '📖 إعادة القراءة' : '🔁 إعادة المحاولة'}</span>
             <span className="sub">Retry</span>
           </Link>
-          <Link to="/game" className="btn btn-ghost btn-col">
+          <Link to={live ? "/challenges" : "/game"} className="btn btn-ghost btn-col">
             <span>🎮 تدريب سريع</span>
             <span className="sub">Quick Practice</span>
           </Link>
