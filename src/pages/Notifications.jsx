@@ -5,7 +5,7 @@ import api from '../api/client.js';
 import { useApi, useHome } from '../api/useApi.js';
 
 /* نوع إشعار الباك اند → تبويب التصميم */
-const TYPE_TAB = { teacher_message: 'معلم', support_reply: 'نظام', badge_earned: 'إنجاز', badge_awarded: 'إنجاز', challenge_completed: 'إنجاز', assignment_graded: 'واجبات', level_up: 'إنجاز', badge: 'إنجاز', achievement: 'إنجاز', reward: 'إنجاز', assignment: 'واجبات', task: 'واجبات', exam: 'واجبات', teacher: 'معلم', feedback: 'معلم', note: 'معلم' };
+const TYPE_TAB = { teacher_feedback: 'معلم', teacher_message: 'معلم', support_reply: 'نظام', badge_earned: 'إنجاز', badge_awarded: 'إنجاز', challenge_completed: 'إنجاز', assignment_graded: 'واجبات', level_up: 'إنجاز', badge: 'إنجاز', achievement: 'إنجاز', reward: 'إنجاز', assignment: 'واجبات', task: 'واجبات', exam: 'واجبات', teacher: 'معلم', feedback: 'معلم', note: 'معلم' };
 const TYPE_ICO = { 'إنجاز': '/img/medal.png', 'واجبات': '/img/clipboard.png', 'معلم': '/img/teacher.png', 'نظام': '/img/bell.png' };
 const ago = (d) => {
   if (!d) return '';
@@ -19,7 +19,8 @@ const toItem = (n) => {
   /* أين يفتح الإشعار */
   const d = typeof n.data === 'string' ? (() => { try { return JSON.parse(n.data); } catch { return {}; } })() : (n.data || {});
   const to = /^badge_/.test(n.type) ? '/badges'
-    : n.type === 'teacher_message' || n.type === 'support_reply' || d.ticket_id ? '/support'
+    : n.type === 'teacher_feedback' ? '/feedback'
+    : n.type === 'teacher_message' || n.type === 'support_reply' || d.ticket_id ? '/support' + (d.ticket_id ? '?ticket=' + d.ticket_id : '')
     : n.type === 'challenge_completed' ? '/challenges'
     : d.assignment_id ? '/assignment?id=' + d.assignment_id
     : n.type === 'level_up' ? '/reports' : null;

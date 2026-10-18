@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Logo, Empty } from '../components.jsx';
 import api from '../api/client.js';
-import { useApi, useHome, activityLink } from '../api/useApi.js';
+import { useApi, useHome, activityLink, usePageTitle } from '../api/useApi.js';
 import { dingSound, winSound, clickSound, playClip } from '../sounds.js';
 import { showToast } from '../toast.js';
 
@@ -80,6 +80,7 @@ export default function ActivityRun({ lessonId, activityId, assignment, library 
   const { reload: reloadHome } = useHome();
   const back = assignment ? '/assignment?id=' + assignment : library ? '/activities?tab=library' : '/path';
   const { data, error } = useApi(() => src.get(), [lessonId, activityId, assignment, library]);
+  usePageTitle(data?.activity?.title, data?.activity?.type_label);
   const [i, setI] = useState(0);
   const [answers, setAnswers] = useState({});   // question_id → answer
   const [audios, setAudios] = useState({});     // pronunciation_id → Blob
@@ -161,6 +162,8 @@ export default function ActivityRun({ lessonId, activityId, assignment, library 
       setBusy(false);
     }
   };
+  // البطاقات: بعد «أعرفها/لم أعرفها» انتقل للبطاقة التالية تلقائياً (الأخيرة تنتظر «إنهاء»)
+  const autoNext = () => { if (!last) setTimeout(() => setI(x => x + 1), 350); };
   const next = () => {
     if (!canNext || busy) return;
     if (last) return finish();
@@ -238,10 +241,10 @@ export default function ActivityRun({ lessonId, activityId, assignment, library 
               <div className="fcard-dots">{A.flashcards.map(c => <i key={c.id} className={c.id === it.id ? "on" : known[c.id] === true ? "ok" : known[c.id] === false ? "no" : ""} />)}</div>
               {/* تقييم الطالب لنفسه — يُرسل للباك اند: flashcards: [{ id, known }] */}
               <div className="options" style={{ marginTop: 16 }}>
-                <button className={'option' + (known[it.id] === true ? ' selected' : '')} onClick={() => { dingSound(); setKnown(k => ({ ...k, [it.id]: true })); }}>
+                <button className={'option' + (known[it.id] === true ? ' selected' : '')} onClick={() => { dingSound(); setKnown(k => ({ ...k, [it.id]: true })); autoNext(); }}>
                   <span className="key">✓</span>أعرفها
                 </button>
-                <button className={'option' + (known[it.id] === false ? ' selected' : '')} onClick={() => { clickSound(); setKnown(k => ({ ...k, [it.id]: false })); }}>
+                <button className={'option' + (known[it.id] === false ? ' selected' : '')} onClick={() => { clickSound(); setKnown(k => ({ ...k, [it.id]: false })); autoNext(); }}>
                   <span className="key">✗</span>لم أعرفها بعد
                 </button>
               </div>

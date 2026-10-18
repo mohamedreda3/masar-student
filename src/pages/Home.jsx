@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { StatsBar, Ring, SecHead, FooterStrip, Empty } from '../components.jsx';
 import { SKILLS } from '../data.js';
 import { realImg } from '../QuestionBody.jsx';
+import { MyPlanCard } from './SupportPlans.jsx';
 import { useHome, SKILL_KEY, unitArt } from '../api/useApi.js';
 import { clickSound, playClip } from '../sounds.js';
 import { AccuracyDonut } from './Reports.jsx';
@@ -68,7 +69,7 @@ function UsefulPhrases() {
   };
   return (
     <>
-      <SecHead ico="/img/speech.png" ar="عبارات مفيدة" en="Useful Phrases" link="عرض الكل" to="/activity/speaking" />
+      <SecHead ico="/img/speech.png" ar="عبارات مفيدة" en="Useful Phrases" />
       {!usefulPhrases.length && <Empty t="لا عبارات بعد" e="No phrases yet" />}
       {usefulPhrases.map(p => (
         <div className="up-row" key={p.ar}>
@@ -338,6 +339,7 @@ function SideColumn() {
   return (
     <div className="col">
       <JourneySummary />
+      <MyPlanCard side />
       {ch && <div className="side-card challenge">
         <div className="head">
           <img src="/img/target.png" alt="" />

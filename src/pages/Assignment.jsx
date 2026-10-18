@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { StatsBar, SecHead, Empty, FooterStrip } from '../components.jsx';
 import api from '../api/client.js';
-import { useApi, useHome, activityLink } from '../api/useApi.js';
+import { useApi, useHome, activityLink, usePageTitle } from '../api/useApi.js';
 import QuestionBody, { realImg, isAnswered } from '../QuestionBody.jsx';
 import AssignmentResult from './AssignmentResult.jsx';
+import { openFile } from '../FileViewer.jsx';
 import { clickSound, winSound } from '../sounds.js';
 import { showToast } from '../toast.js';
 
@@ -27,7 +28,7 @@ async function compressImage(file) {
 const fmtSize = (b) => (b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB');
 const FILE_ICO = (m = '') => (m.includes('pdf') ? '📕' : m.startsWith('audio') ? '🎧' : m.startsWith('video') ? '🎬' : /word|msword|document/.test(m) ? '📘' : '📄');
 
-const fmtDate = (d) => (d ? new Date(d).toLocaleString('ar-EG', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '');
+const fmtDate = (d) => (d ? new Date(d).toLocaleString('ar-EG-u-nu-latn', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '');
 const ACT_ST = { completed: { ar: 'مكتملة', cta: 'راجع' }, in_progress: { ar: 'جارية', cta: 'تابع' } };
 const TYPE_ICO = { exercise: '/img/clipboard.png', flashcard: '/img/flashcards.png', pronunciation: '/img/mic.png', listening: '/img/headphones.png', reading: '/img/book.png', writing: '/img/pencil.png', game: '/img/gamepad.png' };
 const TYPE_AR = { exercise: 'تمرين', flashcard: 'بطاقات', pronunciation: 'نطق', listening: 'استماع', reading: 'قراءة', writing: 'كتابة', game: 'لعبة' };
@@ -49,6 +50,7 @@ export default function Assignment() {
   const nav = useNavigate();
   const { reload: reloadHome } = useHome();
   const { data: A, error, reload } = useApi(() => (id ? api.assignment(id) : Promise.resolve(null)), [id]);
+  usePageTitle(A?.title, A?.type_label);
   const [busy, setBusy] = useState(false);
   const [answers, setAnswers] = useState({});   // question_id → answer
   const [files, setFiles] = useState([]);       // حتى 10 ملفات
@@ -188,8 +190,8 @@ export default function Assignment() {
               {SUBX.files?.length > 0 && (
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
                   {SUBX.files.map(f => (f.mime_type || '').startsWith('image/')
-                    ? <img key={f.url} src={f.url} alt={f.name} onClick={() => setZoom(f)} style={{ width: 84, height: 84, objectFit: 'cover', borderRadius: 10, cursor: 'zoom-in', border: '1px solid var(--line)' }} />
-                    : <a key={f.url} href={f.url} target="_blank" rel="noreferrer" className="chip">{FILE_ICO(f.mime_type)} {f.name}</a>)}
+                    ? <img key={f.url} src={f.url} alt={f.name} onClick={() => openFile(f)} style={{ width: 84, height: 84, objectFit: 'cover', borderRadius: 10, cursor: 'zoom-in', border: '1px solid var(--line)' }} />
+                    : <button key={f.url} onClick={() => openFile(f)} className="chip" style={{ cursor: 'pointer', border: 0 }}>{FILE_ICO(f.mime_type)} {f.name}</button>)}
                 </div>
               )}
             </div>
@@ -221,7 +223,7 @@ export default function Assignment() {
             {attachments.some(a => a.is_image) && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
                 {attachments.filter(a => a.is_image).map(a => (
-                  <img key={a.id ?? a.url} src={a.url} alt={a.name} onClick={() => { clickSound(); setZoom(a); }}
+                  <img key={a.id ?? a.url} src={a.url} alt={a.name} onClick={() => { clickSound(); openFile(a); }}
                     style={{ width: '100%', aspectRatio: '3 / 4', objectFit: 'cover', borderRadius: 12, border: '1px solid var(--line)', cursor: 'zoom-in' }} />
                 ))}
               </div>
@@ -230,7 +232,7 @@ export default function Assignment() {
               <div key={a.id ?? a.url} className="print-row" style={{ marginTop: 10 }}>
                 <span style={{ fontSize: 30 }}>{FILE_ICO(a.mime_type)}</span>
                 <div><div className="t">{a.name}</div><div className="d">{a.size ? fmtSize(a.size) : ''}</div></div>
-                <a href={a.url} target="_blank" rel="noreferrer" download><button className="btn-sm">⬇ فتح / تحميل</button></a>
+                <button className="btn-sm" onClick={() => { clickSound(); openFile(a); }}>👁 فتح</button>
               </div>
             ))}
           </div>

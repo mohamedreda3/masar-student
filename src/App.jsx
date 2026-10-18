@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { TopBar } from './components.jsx';
 import { initFx } from './fx.js';
@@ -42,13 +42,31 @@ import WordSearch from './pages/WordSearch.jsx';
 import Login from './pages/Login.jsx';
 import Assignment from './pages/Assignment.jsx';
 import PlayGame from './pages/PlayGame.jsx';
+import SupportPlans from './pages/SupportPlans.jsx';
+import { FileViewerHost } from './FileViewer.jsx';
 import { getToken } from './api/client.js';
 import { HomeProvider } from './api/useApi.js';
+
+/* عنوان التبويب: «مسار العربية | مسار الطالب - {اسم الصفحة}» */
+const PAGE_TITLES = {
+  '/': 'الصفحة الرئيسية', '/login': 'تسجيل الدخول', '/path': 'مساري', '/unit': 'الوحدة', '/lesson': 'الدرس',
+  '/activities': 'أنشطتي', '/assignments': 'اختباراتي وواجباتي', '/assignment': 'تفاصيل التكليف',
+  '/skills': 'مهاراتي', '/reports': 'تقاريري', '/badges': 'الشارات', '/challenges': 'التحديات والألعاب', '/games': 'التحديات والألعاب',
+  '/play': 'اللعبة', '/more': 'المزيد', '/support': 'موارد الدعم', '/support-plan': 'خطة الدعم الخاصة بي', '/notifications': 'الإشعارات', '/portfolio': 'ملف أعمالي',
+  '/calendar': 'التقويم والمهام', '/feedback': 'ملاحظات المعلم', '/settings': 'حسابي والإعدادات',
+  '/quiz': 'تعليمات الاختبار', '/quiz/run': 'النشاط', '/result': 'النتيجة', '/exam': 'الاختبار', '/exam/result': 'نتيجة الاختبار',
+  '/library': 'مكتبة القصص', '/story': 'القصة', '/game': 'مطابقة المفردات', '/game/wordsearch': 'البحث عن الكلمات',
+  '/level-check': 'تحديد المستوى', '/level-check/question': 'تحديد المستوى', '/level-check/result': 'نتيجة تحديد المستوى',
+  '/exit-ticket': 'تذكرة الخروج', '/rubric': 'معايير التقييم', '/certificate': 'الشهادة', '/engines': 'محركات الأسئلة', '/test-builder': 'مولّد الاختبارات',
+};
+const titleOf = (p) => PAGE_TITLES[p] || (p.startsWith('/activity/') ? 'النشاط' : p.startsWith('/extra/') ? 'نشاط إضافي' : 'الصفحة غير موجودة');
 
 function Shell() {
   const { pathname } = useLocation();
   const firstNav = useRef(true);
   useEffect(() => { initFx(); }, []);
+  const { search } = useLocation();
+  useLayoutEffect(() => { document.title = `مسار العربية | مسار الطالب - ${titleOf(pathname)}`; }, [pathname, search]);
   useEffect(() => {
     if (firstNav.current) { firstNav.current = false; return; }
     swooshSound(); // سووش خفيف مع كل تنقل
@@ -68,6 +86,7 @@ function Shell() {
         <Route path="/activities" element={<Activities mode="activities" />} />
         <Route path="/assignment" element={<Assignment />} />
         <Route path="/play" element={<PlayGame />} />
+        <Route path="/support-plan" element={<SupportPlans />} />
         <Route path="/assignments" element={<Activities key="assignments" mode="assignments" />} />
         <Route path="/games" element={<Navigate to="/challenges" replace />} />
         <Route path="/reports" element={<Reports />} />
@@ -105,6 +124,7 @@ function Shell() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       </div>
+      <FileViewerHost />
     </HomeProvider>
   );
 }

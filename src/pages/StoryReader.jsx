@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Logo, Empty } from '../components.jsx';
 import api from '../api/client.js';
-import { useApi, useHome, unitArt } from '../api/useApi.js';
+import { useApi, useHome, unitArt, usePageTitle } from '../api/useApi.js';
 import QuestionBody, { realImg, isAnswered } from '../QuestionBody.jsx';
-import { playClip, clickSound, winSound } from '../sounds.js';
+import { playClip, clickSound, winSound, stopAudio } from '../sounds.js';
 import { showToast } from '../toast.js';
 
 /* قارئ القصة من الباك اند — نفس تصميم Story: GET /stories/:id
@@ -16,6 +16,7 @@ export default function StoryReader({ id }) {
   const nav = useNavigate();
   const { reload: reloadHome } = useHome();
   const { data: S, error } = useApi(() => api.story(id), [id]);
+  usePageTitle(S?.title && `قصة: ${S.title}`);
   const [p, setP] = useState(0);
   const [speed, setSpeed] = useState('1.0x');
   const [size, setSize] = useState('A');
@@ -38,6 +39,14 @@ export default function StoryReader({ id }) {
     if (!S || !ready.current) return;
     api.storyProgress(id, p + 1).catch(() => {});
   }, [p]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // تشغيل صوت الصفحة تلقائياً عند فتحها/الانتقال إليها
+  useEffect(() => {
+    const src = S?.pages?.[p]?.audio;
+    if (!src || quiz) return;
+    const t = setTimeout(() => playClip(src, parseFloat(speed)), 250);
+    return () => { clearTimeout(t); stopAudio(); };
+  }, [S, p, quiz, speed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const FocusBar = () => (
     <div className="focus-bar">
@@ -111,7 +120,7 @@ export default function StoryReader({ id }) {
             {!pages.length && <Empty t="لا توجد صفحات في هذه القصة بعد" e="No pages yet" />}
             {pages.length > 0 && <>
               <div className="scene" style={{ maxWidth: 640, marginInline: 'auto' }}>
-                <img src={realImg(page.image) || realImg(S.cover_image) || unitArt(S.unit?.title)} alt="" />
+                <img src={page.image || S.cover_image || unitArt(S.unit?.title)} alt="" />
               </div>
               <p style={{ fontSize: SIZES[size], lineHeight: 2.4, marginTop: 24, textAlign: 'center', fontWeight: 500 }}>
                 {page.text_en ? <span className="tr-hover" data-tr={page.text_en}>{page.text}</span> : page.text}

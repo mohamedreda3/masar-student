@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Logo, Empty } from '../components.jsx';
 import api from '../api/client.js';
-import { useApi, useHome } from '../api/useApi.js';
+import { useApi, useHome, usePageTitle } from '../api/useApi.js';
 import GamePlayer from '../games.jsx';
 import { clickSound } from '../sounds.js';
 import { showToast } from '../toast.js';
@@ -16,6 +16,7 @@ export default function PlayGame() {
   const nav = useNavigate();
   const { reload: reloadHome } = useHome();
   const { data: D, error, reload } = useApi(() => (id ? api.game(id) : Promise.resolve(null)), [id]);
+  usePageTitle(D?.game?.title && `لعبة: ${D.game.title}`);
   const [res, setRes] = useState(null);   // رد POST play
   const [run, setRun] = useState(0);      // إعادة اللعب
   if (!id) return <Navigate to="/challenges" replace />;

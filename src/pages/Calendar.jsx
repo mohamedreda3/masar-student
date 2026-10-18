@@ -17,8 +17,8 @@ const SCHEDULED = { color: '#0891B2', label: 'درس مجدول', label_en: 'Sch
 const isScheduled = (e) => e.kind === 'lesson' && e.status !== 'open';
 const colorOf = (e) => (isScheduled(e) ? SCHEDULED.color : e.color);
 
-/* «16:30» → «٤:٣٠ م» (12 ساعة بأرقام عربية) */
-const AR = (n) => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+/* «16:30» → «4:30 م» (12 ساعة — أرقام إنكليزية) */
+const AR = (n) => String(n);
 export const time12 = (t) => {
   const m = /^(\d{1,2}):(\d{2})/.exec(t || '');
   if (!m) return t || '';

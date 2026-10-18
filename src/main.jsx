@@ -2,6 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import './styles.css';
+import { applyPrefs, readPrefs } from './prefs.js';
 
 /* تحميل ثيم الطالب المحفوظ قبل الرسم */
 try {
@@ -12,6 +13,8 @@ try {
   if (m === 'dark') document.documentElement.dataset.mode = 'dark';
   const f = qs.get('fs') || localStorage.getItem('masar-fs');
   if (f === 'sm' || f === 'lg') document.documentElement.dataset.fs = f;
+  // تفضيلات الحساب المحفوظة من آخر جلسة (الثيم/الداكن/الخط/اللغة) — قبل أول رسم
+  applyPrefs(readPrefs(), { save: false });
 } catch { /* بلا تخزين؟ الافتراضي يكفي */ }
 
 /* أي صورة لا تُحمَّل (رابط مكسور أو فارغ) تُستبدل بشعار مسار */

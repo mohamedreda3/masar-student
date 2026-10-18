@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { StatsBar, SecHead, Empty } from '../components.jsx';
 import { SKILLS } from '../data.js';
 import api from '../api/client.js';
-import { useApi, SKILL_KEY } from '../api/useApi.js';
+import { useApi, SKILL_KEY, usePageTitle } from '../api/useApi.js';
 import { clickSound } from '../sounds.js';
 
 /* ===== تعليمات اختبار الوحدة من الـAPI — GET /path/units/:unitId/exam =====
@@ -13,7 +13,7 @@ const GUIDE_ICO = {
   mic: '/img/mic.png', record: '/img/mic.png', review: '/img/clipboard.png', clipboard: '/img/clipboard.png',
   save: '/img/cloudDone.png', cloud: '/img/cloudDone.png', write: '/img/pencil.png', pencil: '/img/pencil.png', time: '/img/target.png',
 };
-export const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '');
+export const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('ar-EG-u-nu-latn', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '');
 const mins = (m) => (m ? (m.from && m.to ? `${m.from}–${m.to}` : m.from || m.to) : null);
 
 /* لون/أيقونة القسم: color/icon ثم skill.color/skill.icon ثم مهارة التصميم المقابلة */
@@ -29,6 +29,7 @@ export function sectionLook(s) {
 export default function ExamInstructions({ unitId }) {
   const nav = useNavigate();
   const { data: D, error } = useApi(() => api.unitExam(unitId), [unitId]);
+  usePageTitle(D?.exam?.title);
 
   if (error) return (
     <div className="page">

@@ -13,7 +13,7 @@ import { clickSound, playClip } from '../sounds.js';
 const MONTHS_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 const MONTHS_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const dayLabel = (iso) => { const d = new Date(iso); return { m: `${d.getDate()} ${MONTHS_AR[d.getMonth()]}`, en: `${MONTHS_EN[d.getMonth()]} ${d.getDate()}` }; };
-const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' }) : '');
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('ar-EG-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }) : '');
 const ago = (d) => {
   if (!d) return '';
   const m = Math.round((Date.now() - new Date(d)) / 60000);

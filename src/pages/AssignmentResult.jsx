@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Ring, SecHead } from '../components.jsx';
 import { realImg } from '../QuestionBody.jsx';
 import { playClip, clickSound } from '../sounds.js';
+import { openFile } from '../FileViewer.jsx';
 
 /* نتيجة الواجب / الاختبار المصحَّح — data.result من GET /assignments/:id (أفضل محاولة مصحَّحة)
    كل قيمة null أو فارغة تُخفى */
 
-const fmtDate = (d) => (d ? new Date(d).toLocaleString('ar-EG', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '');
+const fmtDate = (d) => (d ? new Date(d).toLocaleString('ar-EG-u-nu-latn', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '');
 const mmss = (s) => (s == null ? null : `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.round(s % 60)).padStart(2, '0')}`);
 const num = (n) => (n == null ? '' : Math.round(n * 100) / 100);
 
@@ -224,8 +225,8 @@ export default function AssignmentResult({ r, W = 'الواجب' }) {
         <SecHead ico="/img/scroll.png" ar={`ملفاتي المرفوعة (${r.files.length})`} en="My Uploaded Files" />
         <div className="card" style={{ padding: '16px 20px', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           {r.files.map(f => (f.mime_type || '').startsWith('image/')
-            ? <a key={f.url} href={f.url} target="_blank" rel="noreferrer"><img src={f.url} alt={f.name} style={{ width: 110, height: 110, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--line)' }} /></a>
-            : <a key={f.url} href={f.url} target="_blank" rel="noreferrer" className="chip">📎 {f.name}</a>)}
+            ? <img key={f.url} src={f.url} alt={f.name} onClick={() => openFile(f)} style={{ width: 110, height: 110, objectFit: 'cover', borderRadius: 12, border: '1px solid var(--line)', cursor: 'zoom-in' }} />
+            : <button key={f.url} onClick={() => openFile(f)} className="chip" style={{ cursor: 'pointer', border: 0 }}>📎 {f.name}</button>)}
         </div>
       </>}
     </>

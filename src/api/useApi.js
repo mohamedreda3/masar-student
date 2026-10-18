@@ -1,5 +1,6 @@
 import { createContext, createElement, useCallback, useContext, useEffect, useState } from 'react';
 import api from './client.js';
+import { applyPrefs } from '../prefs.js';
 
 /* جلب بسيط: const { data, loading, error, reload } = useApi(() => api.unit(id), [id]) */
 export function useApi(fn, deps = []) {
@@ -25,12 +26,22 @@ export function HomeProvider({ children }) {
   const { data, reload: reloadHome } = useApi(() => api.home(), []);
   // الهيدر من GET /stats (أحدث من home.stats) — ويُعاد جلبه بعد كل إكمال
   const { data: stats, reload: reloadStats } = useApi(() => api.stats(), []);
+  // تفضيلات المظهر من حساب الطالب — تُطبَّق بعد الدخول على المنصة كلها
+  useEffect(() => { api.settings().then(s => s?.appearance && applyPrefs(s.appearance)).catch(() => {}); }, []);
   const home = data ? { ...data, stats: stats || data.stats } : null;
   const reload = useCallback(() => { reloadHome(); reloadStats(); }, [reloadHome, reloadStats]);
   return createElement(HomeCtx.Provider, { value: { home, reload } }, children);
 }
 
 export const useHome = () => useContext(HomeCtx);
+
+/* عنوان التبويب باسم العنصر الداخلي (وحدة / درس / نشاط / تكليف…) — «مسار العربية | مسار الطالب - {الاسم}»
+   App يضع اسم القسم أولاً (useLayoutEffect) ثم تستبدله الصفحة بالاسم الحقيقي عند وصول بياناتها */
+export const PAGE_PREFIX = 'مسار العربية | مسار الطالب - ';
+export function usePageTitle(...parts) {
+  const name = parts.filter(Boolean).join(' · ');
+  useEffect(() => { if (name) document.title = PAGE_PREFIX + name; }, [name]);
+}
 
 /* اسم الطالب ونقاطه ومستواه من الـAPI بنفس شكل student في data.js */
 export function useStudent(fallback = {}) {

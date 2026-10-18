@@ -25,7 +25,7 @@ export function StoryCard({ s }) {
   return (
     <div className={'station-card' + (locked ? ' locked' : '')}>
       <div className="img">
-        <img loading="lazy" decoding="async" src={realImg(s.cover_image) || unitArt(s.unit?.title)} alt="" />
+        <img loading="lazy" decoding="async" src={s.cover_image || unitArt(s.unit?.title)} alt="" />
         {s.status_label && <span className={'st ' + (ST_CLASS[s.status] || 'current')}>{s.status_label}</span>}
         {locked && <div className="lock-overlay"><span>🔒</span></div>}
         {s.status === 'completed' && s.best_percentage != null && (

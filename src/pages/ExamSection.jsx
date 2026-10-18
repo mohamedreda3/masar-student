@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Logo, Empty } from '../components.jsx';
 import api from '../api/client.js';
-import { useApi, useHome } from '../api/useApi.js';
+import { useApi, useHome, usePageTitle } from '../api/useApi.js';
 import QuestionBody, { isAnswered } from '../QuestionBody.jsx';
 import { dingSound, winSound, clickSound } from '../sounds.js';
 import { showToast } from '../toast.js';
@@ -26,7 +26,7 @@ function FocusBar({ title, unitId, onLeave }) {
   );
 }
 
-const fmtTime = (d) => (d ? new Date(d).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '');
+const fmtTime = (d) => (d ? new Date(d).toLocaleTimeString('ar-EG-u-nu-latn', { hour: '2-digit', minute: '2-digit' }) : '');
 const toPayload = (answers) => Object.entries(answers)
   .filter(([, v]) => v !== undefined && v !== null && !(typeof v === 'string' && !v.trim()) && !(Array.isArray(v) && !v.length))
   .map(([id, answer]) => ({ question_id: Number(id), answer }));
@@ -36,6 +36,7 @@ export default function ExamSection({ unitId, sectionId }) {
   const { reload: reloadHome } = useHome();
   const { data: D, error, reload } = useApi(() => api.examSection(unitId, sectionId), [unitId, sectionId]);
   const { data: X } = useApi(() => api.unitExam(unitId).catch(() => null), [unitId]); // لشريط الأقسام
+  usePageTitle(D?.section?.title && `${D.section.title} — ${X?.exam?.title || 'اختبار الوحدة'}`);
   const [answers, setAnswers] = useState({});
   const [savedAt, setSavedAt] = useState(null);
   const [saving, setSaving] = useState(false);

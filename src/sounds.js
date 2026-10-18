@@ -11,19 +11,37 @@ export function swooshSound() { tone(420, 0, 0.09, 'sine', 0.05); tone(720, 0.05
 /* تشغيل مقطع صوتي (عبارات/نطق/حوار) — مقطع واحد بكل لحظة، الكبسة الثانية توقفه،
    وrate يطبّق سرعة التشغيل المختارة (0.75/1/1.25) */
 let clip = null;
-/* نطق النص بصوت المتصفح العربي (Web Speech) */
+/* أفضل صوت عربي متاح على الجهاز: الأصوات العصبية (Natural/Online) أولاً — مثل Microsoft Zariyah/Hamed في Edge وWindows —
+   ثم صوت Google العربي في Chrome، ثم أي صوت عربي. النص يُنطق كما هو (بتشكيله إن وُجد) */
+let voices = [];
+const loadVoices = () => { try { voices = window.speechSynthesis?.getVoices() || []; } catch { voices = []; } };
+if (typeof window !== 'undefined' && window.speechSynthesis) { loadVoices(); window.speechSynthesis.onvoiceschanged = loadVoices; }
+export function bestArabicVoice() {
+  const ar = voices.filter(v => /^ar/i.test(v.lang));
+  const score = (v) => (/natural|online|neural/i.test(v.name) ? 100 : 0) + (/zariyah|hamed|salma|shakir/i.test(v.name) ? 20 : 0)
+    + (/google/i.test(v.name) ? 40 : 0) + (/ar-SA/i.test(v.lang) ? 10 : /ar-EG/i.test(v.lang) ? 5 : 0) + (v.localService ? 0 : 3);
+  return ar.sort((x, y) => score(y) - score(x))[0] || null;
+}
+let speaking = null;
 export function speak(text, rate = 1) {
   try {
     const ss = window.speechSynthesis;
-    if (!ss || !text) return;
+    if (!ss || !text) return false;
     ss.cancel();
+    if (clip) { clip.pause(); clip = null; }
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ar-SA';
-    u.rate = 0.85 * rate;
-    const v = ss.getVoices().find(x => x.lang?.startsWith('ar'));
+    const v = bestArabicVoice();
+    u.lang = v?.lang || 'ar-SA';
     if (v) u.voice = v;
+    u.rate = 0.9 * rate;
+    u.onend = () => { speaking = null; };
+    speaking = text;
     ss.speak(u);
-  } catch { /* بلا صوت */ }
+    return true;
+  } catch { return false; }
+}
+export function stopAudio() {
+  try { window.speechSynthesis?.cancel(); speaking = null; if (clip) { clip.pause(); clip = null; } } catch { /* */ }
 }
 
 /* نص رابط Google TTS (البارامتر q) — احتياطي لصوت المتصفح إن فشل الملف */
@@ -31,19 +49,32 @@ const ttsText = (src) => {
   try { const u = new URL(src, location.href); return u.pathname.includes('translate_tts') ? u.searchParams.get('q') : null; } catch { return null; }
 };
 
+let playToken = 0;
 export function playClip(src, rate = 1) {
   try {
     const text = ttsText(src);
-    if (clip && clip._src === src && !clip.paused) { clip.pause(); clip = null; return; } // ضغطة ثانية = إيقاف
-    if (clip) clip.pause();
-    clip = new Audio(src);
-    clip._src = src;
-    clip.playbackRate = rate;
-    // لو فشل الملف (Google TTS بـReferer أو رابط مكسور) → صوت المتصفح العربي
-    const fallback = () => { if (text) speak(text, rate); };
-    clip.onerror = fallback;
-    clip.play().catch(fallback);
+    const token = ++playToken;                       // أي تشغيل أحدث يلغي الأقدم (منع التداخل)
+    // ضغطة ثانية على نفس المقطع = إيقاف
+    if ((clip && clip._src === src && !clip.paused) || (text && speaking === text && window.speechSynthesis?.speaking)) { stopAudio(); return; }
+    stopAudio();
+    if (text) {
+      // روابط Google Translate TTS → أفضل صوت عربي على الجهاز (ننتظر تحميل الأصوات قليلاً أول مرة)
+      const go = () => { if (token !== playToken) return; if (bestArabicVoice()) speak(text, rate); else playFile(src, rate, null, token); };
+      if (voices.length) go(); else { loadVoices(); setTimeout(() => { loadVoices(); go(); }, 600); }
+      return;
+    }
+    playFile(src, rate, null, token);
   } catch { /* بلا صوت؟ التجربة تبقى سليمة */ }
+}
+function playFile(src, rate, text, token) {
+  const a = new Audio(src);
+  a._src = src;
+  a.playbackRate = rate;
+  clip = a;
+  let failed = false;
+  const fallback = () => { if (failed || token !== playToken) return; failed = true; if (text) speak(text, rate); };
+  a.onerror = fallback;
+  a.play().catch(fallback);
 }
 
 function tone(freq, start, dur, type = 'sine', vol = 0.12) {

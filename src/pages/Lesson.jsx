@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Logo, Empty, SecHead } from '../components.jsx';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api/client.js';
-import { useApi, useHome, activityLink, ST } from '../api/useApi.js';
+import { useApi, useHome, activityLink, ST, usePageTitle } from '../api/useApi.js';
 import { playClip, dingSound, buzzSound, clickSound } from '../sounds.js';
 import { showToast } from '../toast.js';
 import ActivityLibrary from './ActivityLibrary.jsx';
@@ -371,6 +371,7 @@ export default function Lesson() {
   const [qs] = useSearchParams();
   const id = qs.get('id');
   const { data: P, error } = useApi(() => (id ? api.lessonPage(id) : Promise.resolve(null)), [id]);
+  usePageTitle(P?.lesson?.name, P?.unit?.title);
   if (!id) return <Navigate to="/path" replace />;
   return (
     <div className="page" style={{ background: 'var(--wash)' }}>

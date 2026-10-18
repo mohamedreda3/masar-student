@@ -17,7 +17,7 @@ const TABS = [
   { key: 'not_started', ar: 'لم تبدأ', en: 'Not Started' },
 ];
 const SEEN_KEY = 'masar-badges-seen';
-const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' }) : '');
+const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('ar-EG-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }) : '');
 
 /* صورة الشارة (أو إيموجي/أيقونة احتياطية) */
 function BadgeImg({ b, size = 86, gray }) {

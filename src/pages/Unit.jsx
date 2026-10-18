@@ -2,9 +2,10 @@ import { createPortal } from 'react-dom';
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { showToast } from '../toast.js';
+import { openFile } from '../FileViewer.jsx';
 import { StatsBar, SecHead, FooterStrip } from '../components.jsx';
 import api from '../api/client.js';
-import { useApi, ST as toStatus, activityLink, unitArt, lessonArt } from '../api/useApi.js';
+import { useApi, ST as toStatus, activityLink, unitArt, lessonArt, usePageTitle } from '../api/useApi.js';
 import { clickSound } from '../sounds.js';
 
 /* مودال الفيديو التمهيدي — فيديو الوحدة (مولّد بستايل مسار)، يُدار لاحقاً من لوحة المعلم */
@@ -66,6 +67,7 @@ export default function Unit() {
   // الدرس المختار (من الرابط) أو الدرس الجاري — نجلب أنشطته لرحلة الدرس
   const selId = lessonParam || u?.continue_lesson?.id;
   const { data: L } = useApi(() => (selId ? api.lesson(selId) : Promise.resolve(null)), [selId]);
+  usePageTitle(u?.title && `الوحدة: ${u.title}`);
   if (!unitId) return <Navigate to="/path" replace />;
   if (error) return <div className="page"><StatsBar /><div className="container"><SecHead ar={error.message} en="" /></div></div>;
   if (!u) return <div className="page"><StatsBar /></div>;
@@ -248,7 +250,7 @@ export default function Unit() {
               exam.state === 'ended' ? 'انتهى الاختبار — يمكنك مراجعة نتيجتك' : 'بتكليف من معلمك',
               exam.questions_count && exam.questions_count + ' سؤالاً',
               exam.estimated_minutes && (exam.estimated_minutes.from && exam.estimated_minutes.to ? `${exam.estimated_minutes.from}–${exam.estimated_minutes.to} دقيقة` : (exam.estimated_minutes.from || exam.estimated_minutes.to) + ' دقيقة'),
-              exam.due_at && 'آخر موعد: ' + new Date(exam.due_at).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' }),
+              exam.due_at && 'آخر موعد: ' + new Date(exam.due_at).toLocaleDateString('ar-EG-u-nu-latn', { day: 'numeric', month: 'long' }),
             ].filter(Boolean).join(' · ')}</div>
           </div>
           <div className="actions">
@@ -313,7 +315,7 @@ export default function Unit() {
                 <div className="d">{r.d}</div>
               </div>
               {r.url
-                ? <a href={r.url} target="_blank" rel="noreferrer" onClick={clickSound}><button className="btn-sm">🖨 طباعة / تحميل</button></a>
+                ? <button className="btn-sm" onClick={() => { clickSound(); openFile({ url: r.url, name: r.ar }); }}>👁 فتح / طباعة</button>
                 : <button className="btn-sm" onClick={() => { clickSound(); window.print(); }}>🖨 طباعة / تحميل</button>}
             </div>
           ))}

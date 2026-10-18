@@ -30,7 +30,8 @@ export function media(url) {
 /* تمرير كل روابط /backend/uploads في الرد عبر media() — صور، فيديو، صوت، أفاتار… */
 const UPLOADS = 'masar-alarabia.ae/backend/uploads/';
 function fixMedia(v) {
-  if (typeof v === 'string') return v.includes(UPLOADS) ? media(v) : v;
+  // الأرقام دائماً إنكليزية (1234 لا ١٢٣٤) — تحويل الأرقام العربية/الفارسية في نصوص الرد
+  if (typeof v === 'string') return v.includes(UPLOADS) ? media(v) : v.replace(/[٠-٩۰-۹]/g, d => '0123456789'[(d.charCodeAt(0) & 0xf)]);
   if (Array.isArray(v)) return v.map(fixMedia);
   if (v && typeof v === 'object') { for (const k in v) v[k] = fixMedia(v[k]); return v; }
   return v;
@@ -66,6 +67,8 @@ async function http(path, { method = 'GET', body } = {}) {
   if (!res.ok || json.status === 'error') {
     const err = new Error(json.message || `${method} ${path} → ${res.status}`);
     err.status = res.status; // 403 = مقفل، 409 = قسم مُسلَّم
+    // أخطاء الحقول: { key → error_message } لعرضها بجانب الحقل
+    err.fields = Object.fromEntries((json.errors || []).filter(e => e && e.key).map(e => [e.key, e.error_message || e.message]));
     throw err;
   }
   return json.data;
@@ -77,8 +80,9 @@ export const api = {
   forgotPassword: (identifier, channel) => http('/auth/forgot-password', { method: 'POST', body: { identifier, channel } }), // channel: email | whatsapp
   resetPassword:  (reset_token, new_password) => http('/auth/reset-password', { method: 'POST', body: { reset_token, new_password } }),
   profile:  () => http('/auth/profile'),                          // → { student }
-  updateProfile:  (fields) => http('/auth/profile', { method: 'PATCH', body: fields }),
-  changePassword: (current_password, new_password) => http('/auth/change-password', { method: 'POST', body: { current_password, new_password } }),
+  // تعديل الملف (multipart — الصورة في user_image)
+  updateProfile:  (fields) => { const fd = new FormData(); Object.entries(fields).forEach(([k, v]) => v != null && v !== '' && fd.append(k, v)); return http('/auth/profile', { method: 'PATCH', body: fd }); },
+  changePassword: (current_password, new_password, confirm_password) => http('/auth/change-password', { method: 'PATCH', body: { current_password, new_password, confirm_password } }),
   home:     () => http('/home'),                                  // الرئيسية: stats, skills, tasks, vocabulary…
   stats:    () => http('/stats'),                                 // النقاط، الأيام المتتالية، المستوى، الإشعارات غير المقروءة
   points:   (page = 1) => http('/points?page=' + page),           // سجل كسب النقاط
@@ -104,12 +108,20 @@ export const api = {
   submitStory:      (id, answers, time_spent_seconds) => http(`/stories/${id}/submit`, { method: 'POST', body: { answers, time_spent_seconds } }),
   // التقويم والمهام: ?month=YYYY-MM &category=homework|activity|quiz|final|lesson
   calendar:         (params = {}) => http('/calendar' + qstr(params)),
+  // الإعدادات: PATCH بالحقل المتغيّر فقط ← يرجع notifications/privacy/appearance
+  settings:         () => http('/settings'),
+  saveSettings:     (patch) => http('/settings', { method: 'PATCH', body: patch }),
+  // ملاحظات المعلم (فتحها يعلّمها مقروءة)
+  feedback:         (limit = 20, teacher_id) => http('/feedback?limit=' + limit + (teacher_id ? '&teacher_id=' + teacher_id : '')),
+  // خطة الدعم الخاصة بي (للعرض فقط)
+  supportPlans:     (teacher_id) => http('/support/plans' + (teacher_id ? '?teacher_id=' + teacher_id : '')),
+  supportPlan:      (id) => http(`/support/plans/${id}`),
   // موارد الدعم والتذاكر
   support:          (params = {}) => http('/support' + qstr(params)),
   tickets:          (params = {}) => http('/support/tickets' + qstr(params)),   // ?to=teacher
-  newTicket:        (category, message) => http('/support/tickets', { method: 'POST', body: { category, message } }),
+  newTicket:        (category, message, title) => http('/support/tickets', { method: 'POST', body: { category, message, ...(title ? { title } : {}) } }),
   ticketMessage:    (id, message) => http(`/support/tickets/${id}/messages`, { method: 'POST', body: { message } }),
-  askTeacher:       (message) => http('/support/teacher-questions', { method: 'POST', body: { message } }),
+  askTeacher:       (message, title, teacher_id) => http('/support/teacher-questions', { method: 'POST', body: { message, ...(title ? { title } : {}), ...(teacher_id ? { teacher_id } : {}) } }),
   // التحديات والألعاب
   challenges:       (params = {}) => http('/challenges' + qstr(params)),
   challenge:        (key) => http(`/challenges/${key}`),

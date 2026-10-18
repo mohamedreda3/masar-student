@@ -268,6 +268,7 @@ export const challengeGames = [
 /* ---------------- المزيد ---------------- */
 export const moreLinks = [
   { ar: 'موارد الدعم',       en: 'Support Resources', d: 'أدوات ومواد تساعدك على التعلّم', ico: '/img/book.png',       to: '/support' },
+  { ar: 'خطة الدعم الخاصة بي', en: 'My Support Plan',  d: 'الخطة التي صمّمها لك معلمك لتتحسن خطوة بخطوة', ico: '/img/target.png', to: '/support-plan' },
   { ar: 'الإشعارات',         en: 'Notifications',     d: 'كل جديد يخصّك',                  ico: '/img/bell.png',       to: '/notifications' },
   { ar: 'ملف أعمالي',        en: 'My Portfolio',      d: 'كتاباتك وتسجيلاتك ومشاريعك',     ico: '/img/clipboard.png',  to: '/portfolio' },
   { ar: 'التقويم والمهام',   en: 'Calendar & Tasks',  d: 'مواعيد التسليم والاختبارات',     ico: '/img/clipboard.png',  to: '/calendar' },

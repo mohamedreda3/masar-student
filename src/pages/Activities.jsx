@@ -41,7 +41,7 @@ const MODES = {
   },
 };
 
-const fmtDue = (d) => (d ? new Date(d).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long' }) : '');
+const fmtDue = (d) => (d ? new Date(d).toLocaleDateString('ar-EG-u-nu-latn', { day: 'numeric', month: 'long' }) : '');
 /* شارة الحالة (كلاسات st-chip الموجودة) + نسبة الشريط */
 const ST_LOOK = { pending: ['قادمة', 0], in_progress: ['جارية', 50], submitted: ['جارية', 90], graded: ['مكتملة', 100], missed: ['مقفلة', 0] };
 

@@ -67,7 +67,7 @@ function ChallengeDetails({ k, onClose }) {
           <div className="unit-meta-chips" style={{ marginTop: 16 }}>
             {D.history.map(h => (
               <span key={h.week_start} className="chip" style={h.completed ? { background: 'var(--green-soft)', color: 'var(--green-deep)' } : undefined}>
-                أسبوع {new Date(h.week_start).toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' })}: {h.completed ? `✓ +${h.points}` : '—'}
+                أسبوع {new Date(h.week_start).toLocaleDateString('ar-EG-u-nu-latn', { day: 'numeric', month: 'short' })}: {h.completed ? `✓ +${h.points}` : '—'}
               </span>
             ))}
           </div>
