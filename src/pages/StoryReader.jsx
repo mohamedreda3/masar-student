@@ -20,7 +20,8 @@ export default function StoryReader({ id }) {
   const [p, setP] = useState(0);
   const [speed, setSpeed] = useState('1.0x');
   const [size, setSize] = useState('A');
-  const [quiz, setQuiz] = useState(false);       // شاشة أسئلة الفهم
+  const [quiz, setQuiz] = useState(false);       // false=القراءة · 'mid'=شاشة الاختيار · true=أسئلة الفهم
+  const [qi, setQi] = useState(0);
   const [answers, setAnswers] = useState({});
   const [busy, setBusy] = useState(false);
   const startedAt = useRef(Date.now());
@@ -99,7 +100,7 @@ export default function StoryReader({ id }) {
       });
     } catch (ex) { showToast(ex.message, '⚠️'); setBusy(false); }
   };
-  const finish = () => { clickSound(); qs.length ? setQuiz(true) : submit(); };
+  const finish = () => { clickSound(); qs.length ? setQuiz('mid') : submit(); };
 
   return (
     <div className="page" style={{ background: 'var(--wash)' }}>
@@ -154,27 +155,52 @@ export default function StoryReader({ id }) {
                 : <button className="btn btn-primary" onClick={() => { clickSound(); setP(p + 1); }}>الصفحة التالية ←</button>}
             </div>
           </div>
-        </> : (
-          /* أسئلة الفهم — نفس مكوّن أسئلة الأنشطة */
-          <div className="card activity-card" style={{ marginTop: 22, maxWidth: 980, marginInline: 'auto' }}>
-            <div className="q-title">أسئلة الفهم 🧠</div>
-            <div className="q-en">أجب عن الأسئلة لتعرف مدى فهمك للقصة · {qs.length} أسئلة</div>
-            {qs.map((q, qi) => (
-              <div key={q.id} style={{ borderTop: '1px dashed var(--line)', paddingTop: 20, marginTop: 20 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--mute)' }}>السؤال {qi + 1}{q.points ? ` · ${q.points} درجة` : ''}</div>
-                <QuestionBody q={q} value={answers[q.id]} onChange={(v) => setAnswers(a => ({ ...a, [q.id]: v }))} />
-              </div>
-            ))}
-            <div className="activity-nav">
-              <button className="btn btn-ghost" onClick={() => { clickSound(); setQuiz(false); }}>→ العودة للقصة</button>
-              <div className="spacer" />
-              {unanswered > 0 && <span style={{ fontSize: 12.5, color: 'var(--mute)', fontWeight: 700 }}>باقي {unanswered} أسئلة</span>}
-              <button className="btn btn-primary" disabled={busy || unanswered > 0} onClick={submit} style={{ opacity: unanswered > 0 ? 0.55 : 1 }}>
-                {busy ? '…' : 'تسليم وعرض النتيجة ←'}
+        </> : quiz === 'mid' ? (
+          /* شاشة وسيطة بعد آخر صفحة: الأسئلة أو إعادة الاستماع */
+          <div className="card activity-card story-mid" style={{ marginTop: 22, maxWidth: 820, marginInline: 'auto' }}>
+            <img src="/img/owl.png" alt="" className="story-mid-owl" />
+            <h2>أحسنت! أنهيت قراءة القصة 🎉</h2>
+            <div className="en">«{S.title}» · {pages.length} صفحات</div>
+            <p>هل أنت مستعد لاختبار فهمك؟ أجب عن {qs.length} أسئلة قصيرة، أو استمع للقصة مرة أخرى أولاً.</p>
+            <div className="g-tiles two" style={{ marginTop: 22 }}>
+              <button type="button" className="g-tile story-mid-btn" style={{ '--c': '#3b82f6' }} onClick={() => { clickSound(); setQi(0); setQuiz(true); }}>
+                <span className="k">🧠</span><span><b>حلّ أسئلة القصة</b><small>{qs.length} أسئلة · اختبر فهمك</small></span>
+              </button>
+              <button type="button" className="g-tile story-mid-btn" style={{ '--c': '#10b981' }} onClick={() => { clickSound(); setP(0); setQuiz(false); }}>
+                <span className="k">🎧</span><span><b>استمع للقصة مرة أخرى</b><small>من الصفحة الأولى</small></span>
               </button>
             </div>
           </div>
-        )}
+        ) : (() => {
+          /* أسئلة الفهم — سؤال واحد في كل مرة (نفس مكوّن أسئلة الأنشطة: اختيار، صح/خطأ، ترتيب، توصيل، نصي…) */
+          const q = qs[qi];
+          const lastQ = qi >= qs.length - 1;
+          const ok = q && isAnswered(q, answers[q.id]);
+          return <>
+            <div className="quiz-progress">
+              <span className="lab">السؤال {qi + 1} من {qs.length}</span>
+              <div className="bar"><i style={{ width: ((qi + 1) / Math.max(qs.length, 1)) * 100 + '%' }} /></div>
+              <span className="chip">{qs.length - unanswered} / {qs.length} أُجيب</span>
+            </div>
+            <div className="card activity-card" style={{ marginTop: 22, maxWidth: 980, marginInline: 'auto' }}>
+              <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--mute)' }}>أسئلة الفهم 🧠{q?.points ? ` · ${q.points} درجة` : ''}</div>
+              {q && <div key={q.id} style={{ animation: 'gIn .35s' }}>
+                <QuestionBody q={q} value={answers[q.id]} onChange={(v) => setAnswers(a => ({ ...a, [q.id]: v }))} />
+              </div>}
+              <div className="activity-nav">
+                <button className="btn btn-ghost" onClick={() => { clickSound(); qi === 0 ? setQuiz('mid') : setQi(qi - 1); }}>
+                  → {qi === 0 ? 'رجوع' : 'السابق'}
+                </button>
+                <div className="spacer" />
+                {lastQ
+                  ? <button className="btn btn-primary" disabled={busy || unanswered > 0} onClick={submit} style={{ opacity: unanswered > 0 ? 0.55 : 1 }}>
+                      {busy ? '…' : unanswered > 0 ? `باقي ${unanswered} أسئلة` : 'تسليم وعرض النتيجة ←'}
+                    </button>
+                  : <button className="btn btn-primary" disabled={!ok} onClick={() => { clickSound(); setQi(qi + 1); }} style={{ opacity: ok ? 1 : 0.55 }}>التالي ←</button>}
+              </div>
+            </div>
+          </>;
+        })()}
       </div>
       <div style={{ height: 40 }} />
     </div>

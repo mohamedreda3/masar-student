@@ -2243,3 +2243,14 @@ html.ar-only .en, html.ar-only .en-sub, html.ar-only .sec-en, html.ar-only .en2,
 .g-slot{display:grid;place-items:center;touch-action:none;user-select:none}
 .g-slot.hot{border-style:solid;border-color:var(--brand);background:rgba(59,130,246,.12);transform:scale(1.1)}
 .g-slot.filled{cursor:grab}
+
+/* القصة: شاشة ما بعد القراءة */
+.story-mid{text-align:center;animation:gIn .4s}
+.story-mid-owl{width:110px;animation:gBob 2s ease-in-out infinite}
+.story-mid h2{margin:10px 0 2px;font-size:clamp(20px,5vw,26px)}
+.story-mid p{color:var(--mute);margin-top:10px;line-height:1.9}
+.story-mid-btn{padding:18px}
+.story-mid-btn .k{width:46px;height:46px;font-size:22px;border-radius:14px}
+.story-mid-btn b{display:block;font-size:16px}
+.story-mid-btn small{display:block;font-size:12px;color:var(--mute);font-weight:700;margin-top:2px}
+@media (max-width:560px){.g-tiles.two{grid-template-columns:1fr}}
