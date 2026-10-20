@@ -71,7 +71,7 @@ export const activityLink = (lessonId, activityId) => `/quiz/run?lesson=${lesson
 import { stations as _st, futureStations as _fst } from '../data.js';
 const UNIT_ART = Object.fromEntries([..._st, ..._fst].map(s => [s.ar, s.img]));
 const SCENES = ['/img/scene-greetings.png', '/img/scene-read.png', '/img/scene-story.png', '/img/scene-discover.png', '/img/scene-garden.png', '/img/scene-market.png', '/img/scene-play.png', '/img/scene-speak.png', '/img/scene-express.png', '/img/scene-farm.png'];
-const isReal = (src) => src && typeof src === 'string' && !src.startsWith('data:image/svg');
+const isReal = (src) => !!src && typeof src === 'string' && !!src.trim();   // أي صورة راجعة تُعرض كما هي (البديل فقط عند غيابها؛ والخطأ يعالجه main.jsx)
 const pick = (seed) => { const s = String(seed ?? ''); let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return SCENES[h % SCENES.length]; };
 export const unitArt = (title, image) => (isReal(image) ? image : UNIT_ART[String(title || '').trim()] || pick(title));
 export const lessonArt = (thumb, seed) => (isReal(thumb) ? thumb : pick('lesson-' + seed));

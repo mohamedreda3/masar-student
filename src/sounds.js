@@ -1,6 +1,10 @@
 /* أصوات تفاعل خفيفة — مولّدة بـWeb Audio (بلا ملفات خارجية)
    تُشغَّل فقط استجابةً لنقرة المستخدم (متوافقة مع سياسات المتصفح) */
 let ctx = null;
+/* كتم أصوات اللعب (يُحفظ) — يطبّق على النغمات والمقاطع */
+let muted = (() => { try { return localStorage.getItem('masar-mute') === '1'; } catch { return false; } })();
+export const isMuted = () => muted;
+export function setMuted(m) { muted = !!m; try { localStorage.setItem('masar-mute', muted ? '1' : '0'); } catch { /* */ } if (muted) stopAudio(); }
 const ac = () => (ctx ??= new (window.AudioContext || window.webkitAudioContext)());
 
 /* نقرة عامة خفيفة جداً — لكل زر ورابط (طبقة التلعيب) */
@@ -24,6 +28,7 @@ export function bestArabicVoice() {
 }
 let speaking = null;
 export function speak(text, rate = 1) {
+  if (muted) return false;
   try {
     const ss = window.speechSynthesis;
     if (!ss || !text) return false;
@@ -51,6 +56,7 @@ const ttsText = (src) => {
 
 let playToken = 0;
 export function playClip(src, rate = 1) {
+  if (muted) return;
   try {
     const text = ttsText(src);
     const token = ++playToken;                       // أي تشغيل أحدث يلغي الأقدم (منع التداخل)
@@ -78,6 +84,7 @@ function playFile(src, rate, text, token) {
 }
 
 function tone(freq, start, dur, type = 'sine', vol = 0.12) {
+  if (muted) return;
   try {
     const a = ac();
     const o = a.createOscillator();
@@ -101,3 +108,8 @@ export const dingSound = () => { tone(660, 0, 0.12); tone(880, 0.09, 0.16); };
 export const buzzSound = () => { tone(320, 0, 0.12, 'triangle', 0.08); tone(260, 0.1, 0.16, 'triangle', 0.08); };
 /* إنجاز/فوز — أربيجيو قصير */
 export const winSound = () => { tone(523, 0, 0.12); tone(659, 0.1, 0.12); tone(784, 0.2, 0.12); tone(1047, 0.3, 0.28); };
+
+/* أصوات اللعب الإضافية */
+export const levelSound = () => { tone(523, 0, 0.1); tone(784, 0.08, 0.1); tone(1047, 0.16, 0.22); };
+export const tickTimer = () => tone(1200, 0, 0.07, 'square', 0.04);
+export const popSound = () => { tone(900, 0, 0.05, 'triangle', 0.1); tone(1500, 0.03, 0.06, 'sine', 0.06); };

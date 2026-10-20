@@ -5,6 +5,8 @@ import api from '../api/client.js';
 import { useApi } from '../api/useApi.js';
 import { realImg } from '../QuestionBody.jsx';
 import { clickSound } from '../sounds.js';
+import { GAMES } from '../games.jsx';
+import { catColor, engineOf, starsOf } from '../gameMeta.js';
 
 /* التحديات والألعاب — GET /challenges?category= (تحدي الأسبوع + التحديات + الألعاب + الإحصائيات)
    تفاصيل التحدي: GET /challenges/:key · اللعب: /play?game=:id */
@@ -159,30 +161,40 @@ export default function Challenges() {
             )}
             <div className="filters" style={{ marginTop: 0 }}>
               {(G.categories || []).map(f => (
-                <button key={f.key} className={'filter' + (category === f.key ? ' active' : '')} onClick={() => { clickSound(); setCategory(f.key); }}>
+                <button key={f.key} className={'filter cat-tab' + (category === f.key ? ' active' : '')} style={{ '--cat': catColor(f.key) }} onClick={() => { clickSound(); setCategory(f.key); }}>
                   <span>{f.label} ({f.count})<span className="en">{f.label_en}</span></span>
                 </button>
               ))}
             </div>
-            {D && !G.items?.length && <Empty t="لا توجد ألعاب في هذا القسم بعد" e="No games here yet" />}
+            {D && !G.items?.length && <div className="card" style={{ textAlign: 'center', padding: 26 }}><img src="/img/owl.png" alt="" style={{ width: 90 }} /><Empty t="ألعاب هذا القسم قادمة قريباً!" e="New games are on the way" d="جرّب قسماً آخر الآن 🎮" /></div>}
             <div className="games-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-              {(G.items || []).map(g => (
-                <div key={g.id} style={{ display: 'flex', flexDirection: 'column' }}>
-                  <div className="game-card" onClick={() => play(g)} style={{ cursor: 'pointer' }}>
+              {(G.items || []).map(g => {
+                const known = !!GAMES[g.game_type];
+                const E = engineOf(g.game_type);
+                const stars = starsOf(g.my_best_percentage);
+                return (
+                <div key={g.id} className={'gcard' + (known ? '' : ' soon')} style={{ display: 'flex', flexDirection: 'column', '--cat': catColor(g.category) }}>
+                  <div className="game-card" onClick={() => known && play(g)} style={{ cursor: known ? 'pointer' : 'default' }}>
                     <img className="bg" loading="lazy" decoding="async" src={gameImg(g)} alt="" />
                     <div className="overlay" />
-                    <span className="play-btn">▶</span>
+                    {known ? <span className="play-btn">▶</span> : <span className="gcard-soon">قريباً</span>}
+                    {E && <span className="gcard-ico">{E.ico}</span>}
+                    {g.my_best_percentage >= 100 && <span className="gcard-trophy">🏆</span>}
                     {g.rating != null && <span className="rate" style={{ top: 12, bottom: 'auto' }}>★ {g.rating}</span>}
                     {g.is_new && <span className="rate" style={{ top: 12, bottom: 'auto', insetInlineStart: 12, insetInlineEnd: 'auto', background: 'var(--green)', color: '#fff' }}>جديدة</span>}
                   </div>
                   <div style={{ background: 'var(--white)', border: '1px solid var(--line)', borderTop: 'none', borderRadius: '0 0 14px 14px', padding: '12px 14px', textAlign: 'center', flex: 1 }}>
                     <div style={{ fontWeight: 800, fontSize: 15 }}>{g.title}</div>
                     <div style={{ fontSize: 10, color: 'var(--mute2)' }}>{g.game_type_label} · {g.category_label}</div>
-                    {g.my_best_percentage != null && <div style={{ fontSize: 11, color: 'var(--green-deep)', fontWeight: 800, marginTop: 4 }}>أفضل نتيجة: {Math.round(g.my_best_percentage)}%</div>}
-                    <button className="btn-sm" onClick={() => play(g)} style={{ marginTop: 10, width: '100%' }}>{g.my_plays ? 'العب مجدداً' : 'العب'}</button>
+                    <div className="gcard-stars" title={g.my_best_percentage != null ? 'أفضل نتيجة: ' + Math.round(g.my_best_percentage) + '%' : 'لم تلعبها بعد'}>{[0, 1, 2].map(k => <i key={k} className={k < stars ? 'on' : ''}>★</i>)}</div>
+                    {g.plays_count != null && <div style={{ fontSize: 10.5, color: 'var(--mute2)' }}>🎮 {g.plays_count} لعبة</div>}
+                    {known
+                      ? <button className="btn-sm gcard-play" onClick={() => play(g)} style={{ marginTop: 10, width: '100%' }}>{g.my_plays ? 'العب مجدداً' : 'العب'}</button>
+                      : <div className="qt-muted" style={{ marginTop: 10 }}>قريباً ⏳</div>}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
           <div className="col">

@@ -74,6 +74,33 @@ async function http(path, { method = 'GET', body } = {}) {
   return json.data;
 }
 
+/* رابط مطلق للإرسال (عكس media() في التطوير) */
+export const absUrl = (u) => (typeof u === 'string' && u.startsWith('/backend/uploads/') ? 'https://masar-alarabia.ae' + u : u);
+
+/* رفع ملف إجابة (رسم / تسجيل / ملفات) — POST /uploads multipart مع نسبة التقدّم
+   → يرجع { files:[{url,name,mime_type,size}], url } (الروابط مطلقة لإرسالها كإجابة) */
+export function uploadFiles(files, onProgress) {
+  return new Promise((resolve, reject) => {
+    const fd = new FormData();
+    const list = Array.isArray(files) ? files : [files];
+    if (list.length === 1) fd.append('file', list[0], list[0].name || 'file'); else list.forEach(f => fd.append('files[]', f, f.name || 'file'));
+    const x = new XMLHttpRequest();
+    x.open('POST', BASE + '/student/uploads');
+    x.setRequestHeader('Accept', 'application/json');
+    const tk = getToken(); if (tk) x.setRequestHeader('Authorization', 'Bearer ' + tk);
+    x.upload.onprogress = (e) => { if (e.lengthComputable) onProgress?.(Math.round((e.loaded / e.total) * 100)); };
+    x.onload = () => {
+      let j = {}; try { j = JSON.parse(x.responseText); } catch { /* */ }
+      if (x.status === 401) logout();
+      if (x.status >= 400 || j.status === 'error') { const e = new Error(j.message || 'تعذّر رفع الملف'); e.status = x.status; return reject(e); }
+      const d = j.data || {};
+      resolve({ ...d, url: d.url || d.files?.[0]?.url, files: d.files || (d.url ? [{ url: d.url }] : []) });
+    };
+    x.onerror = () => reject(new Error('تعذّر الاتصال — تحقّق من الإنترنت وأعد المحاولة'));
+    x.send(fd);
+  });
+}
+
 export const api = {
   // الهوية
   login:    (email, password) => http('/auth/login', { method: 'POST', body: { email, password } }), // → { token, student }

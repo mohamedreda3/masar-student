@@ -7,6 +7,7 @@ import { dingSound, winSound, clickSound, playClip } from '../sounds.js';
 import { showToast } from '../toast.js';
 
 import QuestionBody, { realImg, isAnswered } from '../QuestionBody.jsx';
+import QMap from '../QMap.jsx';
 import GamePlayer from '../games.jsx';
 
 /* تشغيل نشاط من الباك اند داخل تصميم الاختبار القصير:
@@ -86,6 +87,7 @@ export default function ActivityRun({ lessonId, activityId, assignment, library 
   const [audios, setAudios] = useState({});     // pronunciation_id → Blob
   const [busy, setBusy] = useState(false);
   const [flipped, setFlipped] = useState({});  // flashcard id → مقلوبة؟
+  const [flags, setFlags] = useState({});      // أسئلة مُعلَّمة للمراجعة
   const [known, setKnown] = useState({});      // flashcard id → أعرفها؟
   const [gameRes, setGameRes] = useState({});  // game id → { score, max_score, mistakes, time_spent_seconds }
   const startedAt = useRef(Date.now());   // لحساب «الوقت المستغرق»
@@ -181,9 +183,16 @@ export default function ActivityRun({ lessonId, activityId, assignment, library 
           <span className="pts">{it.kind === 'question' ? `درجة السؤال ${it.points} · المجموع ${totalPts}` : `${A.points} نقطة`}</span>
         </div>
 
+        {items.length > 1 && items.every(x => x.kind === 'question') && (
+          <QMap
+            cells={items.map(x => ({ answered: isAnswered(x, answers[x.id]), flagged: !!flags[x.id] }))}
+            current={i} onJump={setI}
+            onFlag={(k) => setFlags(f => ({ ...f, [items[k].id]: !f[items[k].id] }))}
+          />
+        )}
+
         <div className="card activity-card" style={{ marginTop: 22 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
-            <span />
+          <div className="ac-top">
             {it.hint && <button className="hint-btn" onClick={() => showToast(it.hint, '💡')}>💡 تلميح</button>}
           </div>
 
@@ -195,7 +204,7 @@ export default function ActivityRun({ lessonId, activityId, assignment, library 
 
           {it.kind === 'pron' && (
             <>
-              {realImg(it.reference_image) && <div className="q-img"><img loading="lazy" decoding="async" src={it.reference_image} alt="" /></div>}
+              {it.reference_image && <div className="q-img"><img loading="lazy" decoding="async" src={it.reference_image} alt="" /></div>}
               <div className="q-title">{it.text}</div>
               <div className="q-en">{it.text_en} · <span dir="ltr">[{it.phonetic}]</span></div>
               <div className="audio-player">
@@ -222,7 +231,7 @@ export default function ActivityRun({ lessonId, activityId, assignment, library 
                 <div className="fcard-in">
                   <div className="fcard-face front">
                     <span className="fcard-tag">الكلمة · Word</span>
-                    {realImg(it.front_image) && <img src={it.front_image} alt="" />}
+                    {it.front_image && <img src={it.front_image} alt="" />}
                     <div className="w">{it.front_text}</div>
                     <div className="e">{it.front_text_en}</div>
                     {it.front_audio && <button className="fcard-snd" onClick={(e) => { e.stopPropagation(); playClip(it.front_audio); }} aria-label="استمع للكلمة">🔊</button>}
@@ -230,7 +239,7 @@ export default function ActivityRun({ lessonId, activityId, assignment, library 
                   </div>
                   <div className="fcard-face back">
                     <span className="fcard-tag">المعنى · Meaning</span>
-                    {realImg(it.back_image) && <img src={it.back_image} alt="" />}
+                    {it.back_image && <img src={it.back_image} alt="" />}
                     <div className="w">{it.back_text}</div>
                     {it.back_text_en && it.back_text_en !== it.front_text_en && <div className="e">{it.back_text_en}</div>}
                     {it.back_audio && <button className="fcard-snd" onClick={(e) => { e.stopPropagation(); playClip(it.back_audio); }} aria-label="استمع للمعنى">🔊</button>}

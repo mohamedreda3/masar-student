@@ -1,12 +1,13 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { playClip, clickSound } from './sounds.js';
+import { NEW_TYPES, OWN_IMAGE, OWN_TITLE, OWN_AUDIO, missingData, MissingData } from './QTypes.jsx';
 
 /* جسم السؤال المشترك (النشاط + الاختبار الختامي) — نفس كلاسات تصميم الكويز
    الأنواع: mcq · tf · arrange · match · fill_in_blank · short_answer · article (+ أي نص)
    الإجابة المرسلة: mcq=option id · tf="true"/"false" · arrange=[ids] · match=[{left_id,right_id}] · نص */
 
 /* الصور المولّدة (بطاقة SVG فيها نص السؤال) تكرار للنص — نعرض الصور الحقيقية فقط */
-export const realImg = (src) => (src && !src.startsWith('data:image/svg') ? src : null);
+export const realImg = (src) => (typeof src === 'string' && src.trim() ? src : null);   // الصورة كما ترجع — null فقط عند غيابها
 
 const asItem = (x, i) => (typeof x === 'string' ? { id: i, text: x } : { id: x.id ?? i, text: x.text ?? x.label ?? x.value, image: x.image });
 export const arrangeItems = (q) => (q.items || q.options || q.words || []).map(asItem);
@@ -21,31 +22,56 @@ export const matchSides = (q) => {
 export function isAnswered(q, v) {
   if (q.type === 'arrange') return Array.isArray(v) && v.length === arrangeItems(q).length;
   if (q.type === 'match') return Array.isArray(v) && v.length === matchSides(q).rights.length;
-  return v !== undefined && v !== null && String(v).trim() !== '';
+  if (NEW_TYPES[q.type] && missingData(q)) return true;   // سؤال ناقص البيانات لا يوقف الطالب
+  if (v === undefined || v === null) return false;
+  if (Array.isArray(v)) return v.length > 0;
+  if (typeof v === 'object') return Object.keys(v).length > 0;
+  return String(v).trim() !== '';
 }
 
 const KEYS = ['أ', 'ب', 'ج', 'د', 'هـ', 'و'];
 
-export default function QuestionBody({ q, value, onChange, readOnly = false, showImage = true }) {
+export default function QuestionBody({ q, value, onChange, readOnly = false, showImage = true, model }) {
   const set = (v) => { if (readOnly) return; clickSound(); onChange(v); };
+  const NT = NEW_TYPES[q.type];
+  const titled = (!OWN_TITLE.includes(q.type) || missingData(q)) && !!q.text;
+  const en = q.text_en && !(q.type === 'highlight' && !missingData(q));
   return (
-    <>
-      {showImage && realImg(q.image) && <div className="q-img"><img loading="lazy" decoding="async" src={q.image} alt="" /></div>}
-      {q.audio && (
+    <div className="duo-q">
+      {NT && (q.type_label || q.auto_graded === false) && (
+        <div className="qt-head">
+          {q.type_label && <span className="chip qt-type">{q.type_label}</span>}
+          {q.auto_graded === false && <span className="chip qt-teacher">👩‍🏫 يصحّحها المعلم</span>}
+        </div>
+      )}
+      {showImage && !OWN_IMAGE.includes(q.type) && q.image && <div className="q-img"><img loading="lazy" decoding="async" src={q.image} alt="" /></div>}
+      {q.audio && !OWN_AUDIO.includes(q.type) && !titled && (
         <div className="audio-player">
           <button className="audio-play" onClick={() => playClip(q.audio)}>▶</button>
           <div className="audio-track"><div className="bar"><i style={{ width: '25%' }} /></div></div>
           <span className="speed-lab">استمع جيداً قبل الإجابة</span>
         </div>
       )}
-      <div className="q-title">{q.text}</div>
-      {q.text_en && <div className="q-en">{q.text_en}</div>}
+      {/* على طريقة Duolingo: البومة وفقاعة السؤال (+ زر الصوت داخل الفقاعة) */}
+      {titled ? (
+        <div className="duo-ask">
+          <img src="/img/owl.png" alt="" className="duo-owl" />
+          <div className="duo-bubble">
+            {q.audio && !OWN_AUDIO.includes(q.type) && <button type="button" className="duo-spk" title="استمع" onClick={() => playClip(q.audio)}>🔊</button>}
+            <div>
+              <div className="q-title">{q.text}</div>
+              {en && <div className="q-en">{q.text_en}</div>}
+            </div>
+          </div>
+        </div>
+      ) : en && <div className="q-en">{q.text_en}</div>}
 
       {q.type === 'mcq' && (
         <div className="options">
           {(q.options || []).map((o, oi) => (
             <button key={o.id} className={'option' + (value === o.id ? ' selected' : '')} disabled={readOnly} onClick={() => set(o.id)}>
               <span className="key">{KEYS[oi]}</span>
+              {o.image && <img src={o.image} alt="" className="qt-opt-img" />}
               {o.text}
             </button>
           ))}
@@ -70,7 +96,9 @@ export default function QuestionBody({ q, value, onChange, readOnly = false, sho
       {q.type === 'match' && <MatchBoard q={q} value={value} onChange={onChange} readOnly={readOnly} />}
 
       {/* نصي: fill_in_blank / short_answer / article (المقالي يصحّحه المعلم) */}
-      {!['mcq', 'tf', 'arrange', 'match'].includes(q.type) && (
+      {NT && <div className="qt-body">{missingData(q) ? <MissingData /> : <NT q={q} value={value} onChange={onChange} readOnly={readOnly} model={model} />}</div>}
+
+      {!NT && !['mcq', 'tf', 'arrange', 'match'].includes(q.type) && (
         <textarea
           className="eng-input" dir="rtl" rows={q.type === 'article' || q.type === 'essay' ? 6 : 2}
           readOnly={readOnly}
@@ -79,7 +107,7 @@ export default function QuestionBody({ q, value, onChange, readOnly = false, sho
           placeholder={q.type === 'article' || q.type === 'essay' ? 'اكتب فقرتك هنا… (يقيّمها معلمك)' : 'اكتب إجابتك هنا…'}
         />
       )}
-    </>
+    </div>
   );
 }
 
@@ -233,7 +261,7 @@ export function ArrangeBoard({ items, value, onChange, readOnly }) {
     if (drag?.over === i) slots.push(gap);
     slots.push(
       <button key={id} type="button" data-ar={id} className="ar-chip in" onPointerDown={e => start(e, id, 'ans')} disabled={readOnly}>
-        <span className="n">{i + 1}</span>{byId(id)?.text}
+        <span className="n">{i + 1}</span>{byId(id)?.image && <img src={byId(id).image} alt="" className="qt-chip-img" />}{byId(id)?.text}
       </button>
     );
   });
@@ -249,7 +277,7 @@ export function ArrangeBoard({ items, value, onChange, readOnly }) {
       {!readOnly && (
         <div className="ar-bank">
           {bank.map(x => (
-            <button key={x.id} type="button" className={'ar-chip' + (drag?.id === x.id ? ' ghosted' : '')} onPointerDown={e => start(e, x.id, 'bank')}>{x.text}</button>
+            <button key={x.id} type="button" className={'ar-chip' + (drag?.id === x.id ? ' ghosted' : '')} onPointerDown={e => start(e, x.id, 'bank')}>{x.image && <img src={x.image} alt="" className="qt-chip-img" />}{x.text}</button>
           ))}
           {order.length > 0 && <button type="button" className="hint-btn" onClick={() => emit([])}>↺ إعادة</button>}
         </div>

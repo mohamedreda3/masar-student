@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Ring, SecHead } from '../components.jsx';
-import { realImg } from '../QuestionBody.jsx';
+import QuestionBody, { realImg } from '../QuestionBody.jsx';
+import { NEW_TYPES, OWN_IMAGE } from '../QTypes.jsx';
 import { playClip, clickSound } from '../sounds.js';
 import { openFile } from '../FileViewer.jsx';
 
@@ -35,12 +36,14 @@ function AnswerView({ v }) {
   return <span>{String(v)}</span>;
 }
 
+const VISUAL_MODEL = ['multi_select', 'drag_drop', 'labeling', 'dropdown_fill', 'hotspot', 'highlight', 'table_organizer', 'early_years', 'composite', 'media_response'];
+
 /* الإجابة النموذجية حسب النوع */
 function ModelAnswer({ q }) {
   const m = q.model_answer;
   if (!m) return null;
   let body;
-  if (q.type === 'mcq') body = null; // تُلوَّن في الخيارات
+  if (q.type === 'mcq' || VISUAL_MODEL.includes(q.type)) body = null; // تُلوَّن داخل السؤال نفسه
   else if (q.type === 'arrange') body = <AnswerView v={m.items} />;
   else if (q.type === 'match') body = <AnswerView v={m.pairs} />;
   else if (m.answers?.length) body = <span>{m.answers.join(' · ')}{m.answers.length > 1 && <span style={{ color: 'var(--mute)', fontSize: 12 }}> (أيٌّ منها مقبول)</span>}</span>;
@@ -63,7 +66,7 @@ function QuestionCard({ q, showModel }) {
         <span style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--mute)' }}>سؤال {q.number}{q.type_label ? ` · ${q.type_label}` : ''}{q.max_points != null ? ` · ${num(q.points)}/${num(q.max_points)}` : ''}</span>
         <Badge q={q} />
       </div>
-      {realImg(Q.image) && <div className="q-img"><img loading="lazy" decoding="async" src={Q.image} alt="" /></div>}
+      {Q.image && !OWN_IMAGE.includes(q.type) && <div className="q-img"><img loading="lazy" decoding="async" src={Q.image} alt="" /></div>}
       {Q.audio && (
         <div className="audio-player">
           <button className="audio-play" onClick={() => playClip(Q.audio)}>▶</button>
@@ -71,11 +74,15 @@ function QuestionCard({ q, showModel }) {
           <span className="speed-lab">استمع للسؤال</span>
         </div>
       )}
-      <div className="q-title">{Q.text}</div>
+      {!['dropdown_fill', 'highlight'].includes(q.type) && <div className="q-title">{Q.text}</div>}
       {Q.text_en && <div className="q-en">{Q.text_en}</div>}
 
-      {/* اختيار من متعدد: إجابتي + الصحيحة في الخيارات */}
-      {q.type === 'mcq' && (Q.options || []).length > 0 ? (
+      {/* الأنواع الجديدة: نفس مكوّن الحل للقراءة فقط + الإجابة النموذجية بصرياً */}
+      {NEW_TYPES[q.type] ? (
+        <div className={'qt-review r-' + (q.result || 'unanswered')}>
+          <QuestionBody q={{ ...Q, type: q.type, type_label: null, text: q.type === 'dropdown_fill' ? Q.text : null, text_en: null, audio: null }} value={q.my_answer ?? undefined} onChange={() => {}} readOnly showImage={false} model={showModel ? q.model_answer : null} />
+        </div>
+      ) : q.type === 'mcq' && (Q.options || []).length > 0 ? (
         <div className="options">
           {Q.options.map(o => {
             const mine = o.id === q.my_answer;
@@ -83,7 +90,7 @@ function QuestionCard({ q, showModel }) {
             const cls = right ? ' correct' : mine ? (q.is_correct ? ' correct' : ' wrong') : '';
             return (
               <button key={o.id} className={'option' + cls} disabled>
-                {o.text}{mine && <span style={{ marginInlineStart: 'auto', fontSize: 11, fontWeight: 900 }}>إجابتي</span>}
+                {o.image && <img src={o.image} alt="" className="qt-opt-img" />}{o.text}{mine && <span style={{ marginInlineStart: 'auto', fontSize: 11, fontWeight: 900 }}>إجابتي</span>}
               </button>
             );
           })}

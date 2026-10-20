@@ -11,7 +11,7 @@ import { StoryCard } from './Library.jsx';
 /* صفحة الدرس (المحتوى الدراسي) — GET /path/lessons/:id/page
    journey = شريط الخطوات · gallery/passage = النص · task = صح/خطأ · self_check · mascot · helpers */
 
-const realImg = (src) => (src && !src.startsWith('data:image/svg') ? src : null);
+const realImg = (src) => (typeof src === 'string' && src.trim() ? src : null);   // الصورة كما ترجع — null فقط عند غيابها
 
 /* شريط الجلسة المركّز — بلا نقاط ولا شارات (قاعدة العميل: لا مشتتات داخل التمرين) */
 function FocusBar({ P }) {
