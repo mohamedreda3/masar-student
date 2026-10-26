@@ -15,6 +15,12 @@ export function swooshSound() { tone(420, 0, 0.09, 'sine', 0.05); tone(720, 0.05
 /* تشغيل مقطع صوتي (عبارات/نطق/حوار) — مقطع واحد بكل لحظة، الكبسة الثانية توقفه،
    وrate يطبّق سرعة التشغيل المختارة (0.75/1/1.25) */
 let clip = null;
+/* المقطع الجاري الآن (رابطه) + مشتركون يتابعونه — زر الصوت يرسم موجته أثناء التشغيل */
+let current = null;
+const audioSubs = new Set();
+const notify = (src) => { current = src; audioSubs.forEach(f => { try { f(src); } catch { /* */ } }); };
+export const playingSrc = () => current;
+export const onAudio = (cb) => { audioSubs.add(cb); return () => audioSubs.delete(cb); };
 /* أفضل صوت عربي متاح على الجهاز: الأصوات العصبية (Natural/Online) أولاً — مثل Microsoft Zariyah/Hamed في Edge وWindows —
    ثم صوت Google العربي في Chrome، ثم أي صوت عربي. النص يُنطق كما هو (بتشكيله إن وُجد) */
 let voices = [];
@@ -39,7 +45,7 @@ export function speak(text, rate = 1) {
     u.lang = v?.lang || 'ar-SA';
     if (v) u.voice = v;
     u.rate = 0.9 * rate;
-    u.onend = () => { speaking = null; };
+    u.onend = () => { speaking = null; notify(null); };
     speaking = text;
     ss.speak(u);
     return true;
@@ -47,6 +53,7 @@ export function speak(text, rate = 1) {
 }
 export function stopAudio() {
   try { window.speechSynthesis?.cancel(); speaking = null; if (clip) { clip.pause(); clip = null; } } catch { /* */ }
+  notify(null);
 }
 
 /* نص رابط Google TTS (البارامتر q) — احتياطي لصوت المتصفح إن فشل الملف */
@@ -63,6 +70,7 @@ export function playClip(src, rate = 1) {
     // ضغطة ثانية على نفس المقطع = إيقاف
     if ((clip && clip._src === src && !clip.paused) || (text && speaking === text && window.speechSynthesis?.speaking)) { stopAudio(); return; }
     stopAudio();
+    notify(src);
     if (text) {
       // روابط Google Translate TTS → أفضل صوت عربي على الجهاز (ننتظر تحميل الأصوات قليلاً أول مرة)
       const go = () => { if (token !== playToken) return; if (bestArabicVoice()) speak(text, rate); else playFile(src, rate, null, token); };
@@ -75,11 +83,15 @@ export function playClip(src, rate = 1) {
 function playFile(src, rate, text, token) {
   const a = new Audio(src);
   a._src = src;
+  a.preload = 'none';
   a.playbackRate = rate;
   clip = a;
   let failed = false;
-  const fallback = () => { if (failed || token !== playToken) return; failed = true; if (text) speak(text, rate); };
+  const done = () => { if (token === playToken) notify(null); };
+  const fallback = () => { if (failed || token !== playToken) return; failed = true; if (text && speak(text, rate)) return; done(); };
   a.onerror = fallback;
+  a.onended = done;
+  a.onpause = done;
   a.play().catch(fallback);
 }
 

@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { StatsBar, Ring, SecHead, FooterStrip, Empty } from '../components.jsx';
 import { SKILLS } from '../data.js';
-import { realImg } from '../QuestionBody.jsx';
 import { MyPlanCard } from './SupportPlans.jsx';
-import { useHome, SKILL_KEY, unitArt } from '../api/useApi.js';
+import { useApi, useHome, SKILL_KEY, unitArt, photoOnly } from '../api/useApi.js';
+import api from '../api/client.js';
+import { time12, routeOf as calendarRoute } from './Calendar.jsx';
 import { clickSound, playClip } from '../sounds.js';
 import { AccuracyDonut } from './Reports.jsx';
 import { Sparkline, SPARK_VARIANT } from '../Sparkline.jsx';
@@ -38,21 +39,23 @@ function Pronunciation() {
   );
 }
 
-/* مفردات اليوم — بطاقات مصورة بصوت */
+/* مفردات اليوم — بطاقات بصوت (الكلمة مرة واحدة؛ الصورة تظهر فقط لو حقيقية) */
+const VOC_TINT = ['t-green', 't-blue', 't-gold', 't-pink', 't-purple'];
 function DailyVocab() {
-  const lessonVocab = (useHome().home?.vocabulary || []).map(v => ({ ar: v.word, en: v.word_en, img: v.image || '/img/logo-masar.svg', audio: v.audio }));
+  const lessonVocab = (useHome().home?.vocabulary || []).map(v => ({ ar: v.word, en: v.word_en, img: photoOnly(v.image), audio: v.audio }));
   return (
     <>
       <SecHead ico="/img/flashcards.png" ar="مفردات اليوم" en="Today's Words" link="عرض الكل" to="/activity/vocab" />
       {!lessonVocab.length && <Empty t="لا مفردات اليوم" e="No words today" />}
       <div className="dv-grid">
-        {lessonVocab.map(v => (
-          <div className="dv-card" key={v.ar}>
-            <div className="img"><img loading="lazy" decoding="async" src={v.img} alt="" /></div>
-            <div className="ar">{v.ar}</div>
-            <div className="tr">{v.en}</div>
-            <button className="sound-btn" onClick={() => playClip(v.audio)} aria-label={'استمع: ' + v.ar}>🔊</button>
-          </div>
+        {lessonVocab.map((v, i) => (
+          <button type="button" className={'dv-card ' + VOC_TINT[i % VOC_TINT.length]} key={v.ar} disabled={!v.audio}
+            onClick={() => playClip(v.audio)} aria-label={v.audio ? 'استمع: ' + v.ar : v.ar}>
+            {v.img && <span className="img"><img loading="lazy" decoding="async" src={v.img} alt="" /></span>}
+            <span className="ar">{v.ar}</span>
+            <span className="tr">{v.en}</span>
+            {v.audio && <span className="sound-btn" aria-hidden="true">🔊</span>}
+          </button>
         ))}
       </div>
     </>
@@ -71,18 +74,21 @@ function UsefulPhrases() {
     <>
       <SecHead ico="/img/speech.png" ar="عبارات مفيدة" en="Useful Phrases" />
       {!usefulPhrases.length && <Empty t="لا عبارات بعد" e="No phrases yet" />}
-      {usefulPhrases.map(p => (
-        <div className="up-row" key={p.ar}>
-          <button className="sound-btn" onClick={() => playClip(p.audio)} aria-label={'استمع: ' + p.ar}>🔊</button>
-          <div className="txt">
-            <div className="ar">{p.ar}</div>
-            <div className="tr">{p.en}</div>
+      <div className="up-grid">
+        {usefulPhrases.map(p => (
+          <div className="up-row" key={p.ar}>
+            <button className="sound-btn" onClick={() => playClip(p.audio)} aria-label={'استمع: ' + p.ar}>🔊</button>
+            <div className="txt">
+              <div className="ar">{p.ar}</div>
+              <div className="tr">{p.en}</div>
+            </div>
+            <button className={'fav-btn' + (favs.includes(p.ar) ? ' on' : '')} onClick={() => toggleFav(p.ar)}
+              aria-label={favs.includes(p.ar) ? 'إزالة من المفضلة' : 'أضف للمفضلة'} title="المفضلة">
+              {favs.includes(p.ar) ? '❤' : '♡'}
+            </button>
           </div>
-          <button className={'fav-btn' + (favs.includes(p.ar) ? ' on' : '')} onClick={() => toggleFav(p.ar)} aria-label="أضف للمفضلة">
-            {favs.includes(p.ar) ? '❤' : '♡'}
-          </button>
-        </div>
-      ))}
+        ))}
+      </div>
       <div className="tip-strip">
         <img src="/img/bulb.png" alt="" />
         <span className="l">💡 نصيحة لغوية</span>
@@ -185,16 +191,50 @@ const TASK_LOOK = [
   { color: 'var(--orange)', soft: 'var(--orange-soft)', ico: '/img/mic.png' },
   { color: 'var(--pink)', soft: 'var(--pink-soft)', ico: '/img/pencil.png', pink: true },
 ];
+/* مواعيد اليوم من التقويم — kind → شكل السطر */
+const KIND_LOOK = {
+  lesson:     { soft: 'var(--blue-soft)',   ico: '/img/book.png' },
+  activity:   { soft: '#e0f4f8',            ico: '/img/target.png' },
+  assignment: { soft: 'var(--orange-soft)', ico: '/img/clipboard.png' },
+  exam:       { soft: 'var(--lav-soft)',    ico: '/img/medal.png' },
+};
+const EV_CHIP = { ongoing: 'جارية', upcoming: 'قادمة', waiting: 'جارية', completed: 'مكتملة', missed: 'مقفلة', open: 'جارية' };
+
 function Tasks() {
   const tasks = (useHome().home?.today_tasks || []).map((t, i) => ({
     ...TASK_LOOK[i % 3], ar: t.title, en: t.type_label, d: t.description || (t.remaining_days != null ? `متبقٍ ${t.remaining_days} يوم · ${t.duration_minutes} دقيقة` : ''),
     done: t.completed_count, of: t.total_count, pct: Math.round(t.progress || 0), cta: t.status === 'not_started' ? 'ابدأ' : 'تابع',
     to: t.type === 'activity' ? '/activities' : '/assignments',
   }));
+  /* نفس مصدر «جدول اليوم» في التقويم — دروس/تكاليف/اختبارات اليوم تظهر هنا أيضاً */
+  const { data: C, loading: cLoading } = useApi(() => api.calendar({}), []);
+  const titles = new Set(tasks.map(t => t.ar));
+  const events = (C?.today_schedule || []).filter(e => !titles.has(e.title));
   return (
     <>
-      <SecHead ico="/img/clipboard.png" ar="مهام اليوم" en="Today's Tasks" />
-      {!tasks.length && <Empty t="لا مهام اليوم" e="No tasks today" />}
+      <SecHead ico="/img/clipboard.png" ar="مهام اليوم" en="Today's Tasks" link="التقويم" to="/calendar" />
+      {!tasks.length && !events.length && !cLoading && <Empty t="لا مهام اليوم" e="No tasks today" />}
+      {events.map(e => {
+        const K = KIND_LOOK[e.kind] || KIND_LOOK.activity;
+        const to = calendarRoute(e.open_api);
+        return (
+          <div className="task" key={'ev-' + e.id}>
+            <div className="ico" style={{ background: K.soft }}><img src={K.ico} alt="" /></div>
+            <div className="body">
+              <h4>{e.title}</h4>
+              <div className="en">{e.kind_label || e.type_label || 'موعد اليوم'}</div>
+              <div className="d">{[e.time && '⏰ ' + time12(e.time), e.teacher].filter(Boolean).join(' · ')}</div>
+            </div>
+            <div className="prog" style={{ width: 'auto', textAlign: 'center' }}>
+              <span className={'st-chip ' + (EV_CHIP[e.status] || 'قادمة')} style={e.color ? { color: e.color, background: e.color + '18' } : undefined}>{e.status_label}</span>
+            </div>
+            <div className="act">
+              {to ? <Link to={to}><button className="btn-sm">افتح</button></Link>
+                  : <Link to="/calendar"><button className="btn-sm">التفاصيل</button></Link>}
+            </div>
+          </div>
+        );
+      })}
       {tasks.map(t => (
         <div className="task" key={t.ar}>
           <div className="ico" style={{ background: t.soft }}><img src={t.ico} alt="" /></div>
@@ -281,7 +321,7 @@ function Games() {
       <div className="games-grid">
         {games.map(g => (
           <Link to={'/play?game=' + g.id} className="game-card" key={g.id}>
-            <img className="bg" loading="lazy" decoding="async" src={realImg(g.image) || GAME_IMG[g.game_type] || '/img/scene-cards.png'} alt="" />
+            <img className="bg" loading="lazy" decoding="async" src={photoOnly(g.image) || GAME_IMG[g.game_type] || '/img/scene-cards.png'} alt="" />
             <div className="overlay">
               <div className="t">{g.title}</div>
               <div className="e">{g.game_type_label}</div>

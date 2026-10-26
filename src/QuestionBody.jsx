@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef, useState } from 'react';
-import { playClip, clickSound } from './sounds.js';
+import { clickSound } from './sounds.js';
+import { Picture, SoundButton, useStopAudio, isMediaOnly } from './media.jsx';
+import QuestionGoals from './QuestionGoals.jsx';
 import { NEW_TYPES, OWN_IMAGE, OWN_TITLE, OWN_AUDIO, missingData, MissingData } from './QTypes.jsx';
 
 /* جسم السؤال المشترك (النشاط + الاختبار الختامي) — نفس كلاسات تصميم الكويز
@@ -9,7 +11,7 @@ import { NEW_TYPES, OWN_IMAGE, OWN_TITLE, OWN_AUDIO, missingData, MissingData } 
 /* الصور المولّدة (بطاقة SVG فيها نص السؤال) تكرار للنص — نعرض الصور الحقيقية فقط */
 export const realImg = (src) => (typeof src === 'string' && src.trim() ? src : null);   // الصورة كما ترجع — null فقط عند غيابها
 
-const asItem = (x, i) => (typeof x === 'string' ? { id: i, text: x } : { id: x.id ?? i, text: x.text ?? x.label ?? x.value, image: x.image });
+const asItem = (x, i) => (typeof x === 'string' ? { id: i, text: x } : { id: x.id ?? i, text: x.text ?? x.label ?? x.value, image: x.image, audio: x.audio });
 export const arrangeItems = (q) => (q.items || q.options || q.words || []).map(asItem);
 export const matchSides = (q) => {
   const side = (s) => (q.options || []).filter(o => o.side === s).map(asItem);
@@ -31,8 +33,9 @@ export function isAnswered(q, v) {
 
 const KEYS = ['أ', 'ب', 'ج', 'د', 'هـ', 'و'];
 
-export default function QuestionBody({ q, value, onChange, readOnly = false, showImage = true, model }) {
+export default function QuestionBody({ q, value, onChange, readOnly = false, showImage = true, model, timed = false }) {
   const set = (v) => { if (readOnly) return; clickSound(); onChange(v); };
+  useStopAudio([q.id]);
   const NT = NEW_TYPES[q.type];
   const titled = (!OWN_TITLE.includes(q.type) || missingData(q)) && !!q.text;
   const en = q.text_en && !(q.type === 'highlight' && !missingData(q));
@@ -44,11 +47,10 @@ export default function QuestionBody({ q, value, onChange, readOnly = false, sho
           {q.auto_graded === false && <span className="chip qt-teacher">👩‍🏫 يصحّحها المعلم</span>}
         </div>
       )}
-      {showImage && !OWN_IMAGE.includes(q.type) && q.image && <div className="q-img"><img loading="lazy" decoding="async" src={q.image} alt="" /></div>}
+      {showImage && !OWN_IMAGE.includes(q.type) && <Picture src={q.image} alt={q.text || 'صورة السؤال'} className="q-img" />}
       {q.audio && !OWN_AUDIO.includes(q.type) && !titled && (
-        <div className="audio-player">
-          <button className="audio-play" onClick={() => playClip(q.audio)}>▶</button>
-          <div className="audio-track"><div className="bar"><i style={{ width: '25%' }} /></div></div>
+        <div className="q-listen">
+          <SoundButton src={q.audio} size="lg" label={q.text_en || 'السؤال'} maxPlays={q.max_plays ?? undefined} playKey={'q' + q.id} />
           <span className="speed-lab">استمع جيداً قبل الإجابة</span>
         </div>
       )}
@@ -57,7 +59,7 @@ export default function QuestionBody({ q, value, onChange, readOnly = false, sho
         <div className="duo-ask">
           <img src="/img/owl.png" alt="" className="duo-owl" />
           <div className="duo-bubble">
-            {q.audio && !OWN_AUDIO.includes(q.type) && <button type="button" className="duo-spk" title="استمع" onClick={() => playClip(q.audio)}>🔊</button>}
+            {!OWN_AUDIO.includes(q.type) && <SoundButton src={q.audio} size="md" label={q.text} className="duo-snd" maxPlays={q.max_plays ?? undefined} playKey={'q' + q.id} />}
             <div>
               <div className="q-title">{q.text}</div>
               {en && <div className="q-en">{q.text_en}</div>}
@@ -66,13 +68,17 @@ export default function QuestionBody({ q, value, onChange, readOnly = false, sho
         </div>
       ) : en && <div className="q-en">{q.text_en}</div>}
 
+      {/* ماذا أتعلم هنا؟ — شريط هادئ تحت السؤال وقبل الإجابات */}
+      <QuestionGoals question={q} timed={timed} />
+
       {q.type === 'mcq' && (
-        <div className="options">
+        <div className={'options' + ((q.options || []).some(o => o.image) ? ' pics' : '')}>
           {(q.options || []).map((o, oi) => (
-            <button key={o.id} className={'option' + (value === o.id ? ' selected' : '')} disabled={readOnly} onClick={() => set(o.id)}>
+            <button key={o.id} className={'option' + (value === o.id ? ' selected' : '') + (isMediaOnly(o) ? ' media-only' : '')} disabled={readOnly} onClick={() => set(o.id)}>
               <span className="key">{KEYS[oi]}</span>
-              {o.image && <img src={o.image} alt="" className="qt-opt-img" />}
-              {o.text}
+              <Picture src={o.image} alt={o.text || 'صورة الخيار'} zoom={false} ratio={o.image ? '1 / 1' : undefined} className="opt-pic" />
+              {o.text && <span className="opt-t">{o.text}</span>}
+              <SoundButton src={o.audio} size="sm" label={o.text} className="opt-snd" />
             </button>
           ))}
         </div>
@@ -179,8 +185,9 @@ function MatchBoard({ q, value, onChange, readOnly }) {
       <button key={side + it.id} type="button" className={'mb-item' + (c ? ' linked' : '') + (on ? ' picked' : '')} ref={el => { refs.current[side + it.id] = el; }} data-mk={side + it.id} onPointerDown={e => startDrag(e, side, it.id)} disabled={readOnly}
         style={{ width: '100%', minHeight: 54, padding: '10px 14px', borderRadius: 14, fontFamily: 'inherit', fontWeight: 800, fontSize: 'clamp(13px, 3.4vw, 16px)', cursor: readOnly ? 'default' : 'grab', touchAction: 'none', userSelect: 'none', textAlign: 'center', wordBreak: 'break-word', transition: 'all .15s',
           border: '2px solid ' + (c || (on ? 'var(--brand)' : 'var(--line)')), background: c ? c + '18' : on ? 'var(--sky-soft, #e8f1ff)' : 'var(--card, #fff)', color: c || 'inherit', transform: on ? 'scale(1.03)' : 'none', boxShadow: on ? '0 4px 14px rgba(59,130,246,.25)' : 'none' }}>
-        {it.image && <img src={it.image} alt="" style={{ display: 'block', maxWidth: '100%', maxHeight: 70, margin: '0 auto 6px', borderRadius: 8 }} />}
+        <Picture src={it.image} alt={it.text || 'صورة'} zoom={false} className="mb-pic" style={{ maxHeight: 70, margin: '0 auto 6px' }} />
         <span dir="auto">{it.text}</span>
+        <SoundButton src={it.audio} size="sm" label={it.text} className="mb-snd" />
       </button>
     );
   };
@@ -261,7 +268,9 @@ export function ArrangeBoard({ items, value, onChange, readOnly }) {
     if (drag?.over === i) slots.push(gap);
     slots.push(
       <button key={id} type="button" data-ar={id} className="ar-chip in" onPointerDown={e => start(e, id, 'ans')} disabled={readOnly}>
-        <span className="n">{i + 1}</span>{byId(id)?.image && <img src={byId(id).image} alt="" className="qt-chip-img" />}{byId(id)?.text}
+        <span className="n">{i + 1}</span>
+        <Picture src={byId(id)?.image} alt={byId(id)?.text || 'صورة'} zoom={false} className="qt-chip-img" />{byId(id)?.text}
+        <SoundButton src={byId(id)?.audio} size="sm" label={byId(id)?.text} />
       </button>
     );
   });
@@ -277,7 +286,10 @@ export function ArrangeBoard({ items, value, onChange, readOnly }) {
       {!readOnly && (
         <div className="ar-bank">
           {bank.map(x => (
-            <button key={x.id} type="button" className={'ar-chip' + (drag?.id === x.id ? ' ghosted' : '')} onPointerDown={e => start(e, x.id, 'bank')}>{x.image && <img src={x.image} alt="" className="qt-chip-img" />}{x.text}</button>
+            <button key={x.id} type="button" className={'ar-chip' + (drag?.id === x.id ? ' ghosted' : '')} onPointerDown={e => start(e, x.id, 'bank')}>
+              <Picture src={x.image} alt={x.text || 'صورة'} zoom={false} className="qt-chip-img" />{x.text}
+              <SoundButton src={x.audio} size="sm" label={x.text} />
+            </button>
           ))}
           {order.length > 0 && <button type="button" className="hint-btn" onClick={() => emit([])}>↺ إعادة</button>}
         </div>

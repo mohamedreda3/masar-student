@@ -4,6 +4,7 @@ import { Logo, Empty } from '../components.jsx';
 import api from '../api/client.js';
 import { useApi, useHome, usePageTitle } from '../api/useApi.js';
 import QuestionBody, { isAnswered } from '../QuestionBody.jsx';
+import { GoalsIntro } from '../QuestionGoals.jsx';
 import { dingSound, winSound, clickSound } from '../sounds.js';
 import { showToast } from '../toast.js';
 import { sectionLook } from './ExamInstructions.jsx';
@@ -169,6 +170,7 @@ export default function ExamSection({ unitId, sectionId }) {
             {readOnly && !res && <span className="chip" style={{ background: 'var(--line2)' }}>🔒 للقراءة فقط</span>}
           </div>
           {S.description && <p className="prompt" style={{ marginTop: 10 }}>{S.description}</p>}
+          {!readOnly && <GoalsIntro questions={qs} title="في هذا القسم ستتعلم" />}
 
           {qs.map((q, qi) => {
             const v = verdict(q);

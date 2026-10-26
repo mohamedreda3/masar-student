@@ -75,3 +75,5 @@ const isReal = (src) => !!src && typeof src === 'string' && !!src.trim();   // �
 const pick = (seed) => { const s = String(seed ?? ''); let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return SCENES[h % SCENES.length]; };
 export const unitArt = (title, image) => (isReal(image) ? image : UNIT_ART[String(title || '').trim()] || pick(title));
 export const lessonArt = (thumb, seed) => (isReal(thumb) ? thumb : pick('lesson-' + seed));
+/* صورة حقيقية فقط: الصور المولّدة (SVG مكتوب عليه نص البطاقة) تكرّر النص — نتجاهلها */
+export const photoOnly = (src) => (/\.(png|jpe?g|webp|gif|avif)(\?|$)/i.test(String(src || '')) ? src : null);

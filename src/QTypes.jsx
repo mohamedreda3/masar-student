@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { playClip, clickSound, stopAudio } from './sounds.js';
 import { uploadFiles, absUrl } from './api/client.js';
 import { openFile } from './FileViewer.jsx';
+import { Picture, SoundButton, useIsPlaying } from './media.jsx';
 import { showToast } from './toast.js';
 import QuestionBody, { isAnswered } from './QuestionBody.jsx';   // للحاوية المركّبة (استيراد دائري آمن: يُستخدم وقت العرض فقط)
 
@@ -189,10 +190,10 @@ function MultiSelect({ q, value, onChange, readOnly, model }) {
             <button key={o.id} type="button" className={'ms-card' + (on ? ' on' : '') + st} disabled={readOnly} onClick={() => toggle(o.id)}
               style={{ '--c': MS_COLORS[k % MS_COLORS.length], animationDelay: k * 0.05 + 's' }}>
               <span className="ms-tick">✓</span>
-              {o.image && <img src={o.image} alt="" />}
+              <Picture src={o.image} alt={o.text || 'صورة الخيار'} zoom={false} />
               <span className="ms-t">{o.text}</span>
               {o.text_en && <span className="ms-en">{o.text_en}</span>}
-              {o.audio && <span className="qt-spk" onClick={(e) => { e.stopPropagation(); playClip(o.audio); }}>🔊</span>}
+              <SoundButton src={o.audio} size="sm" label={o.text} className="qt-spk" />
             </button>
           );
         })}
@@ -225,7 +226,8 @@ function DragDropQ({ q, value, onChange, readOnly, model }) {
   const chip = (it) => (
     <button key={it.id} type="button" className={'ar-chip' + (place[s(it.id)] ? ' in' : '') + (sel === it.id ? ' in' : '') + (drag?.payload === it.id ? ' ghosted' : '')}
       disabled={readOnly} onPointerDown={readOnly ? undefined : (e) => start(e, it.id, it.text)}>
-      {it.image && <img src={it.image} alt="" className="qt-chip-img" />}{it.text}
+      <Picture src={it.image} alt={it.text || 'صورة'} zoom={false} className="qt-chip-img" />{it.text}
+      <SoundButton src={it.audio} size="sm" label={it.text} />
       {model && rightZone(it.id) && place[s(it.id)] && <small className="qt-right">← {rightZone(it.id)}</small>}
     </button>
   );
@@ -246,8 +248,8 @@ function DragDropQ({ q, value, onChange, readOnly, model }) {
         {zones.map((z, i) => (
           <div key={z.id} data-drop={z.id} onClick={() => sel != null && put(sel, z.id)}
             className={'g-zone' + (drag?.over === s(z.id) ? ' hot' : '') + (sel != null ? ' ready' : '')} style={{ '--c': ['#3b82f6', '#f59e0b', '#10b981', '#ec4899', '#8b5cf6', '#14b8a6'][i % 6] }}>
-            <div className="g-zone-h"><span>{z.label}</span><small>{items.filter(it => place[s(it.id)] === s(z.id)).length}</small></div>
-            {z.image && <img src={z.image} alt="" className="qt-zone-img" />}
+            <div className="g-zone-h"><span>{z.label}</span><SoundButton src={z.audio} size="sm" label={z.label} /><small>{items.filter(it => place[s(it.id)] === s(z.id)).length}</small></div>
+            <Picture src={z.image} alt={z.label || 'صورة'} zoom={false} className="qt-zone-img" />
             <div className="g-zone-b">
               {items.filter(it => place[s(it.id)] === s(z.id)).map(chip)}
               {!items.some(it => place[s(it.id)] === s(z.id)) && <span className="g-zone-ph">أفلت هنا</span>}
@@ -544,7 +546,7 @@ function ImageDescription({ q, value, onChange, readOnly }) {
   const min = q.min_words;
   return (
     <>
-      {q.image && <div className="q-img"><img src={q.image} alt="" onClick={() => openFile({ url: q.image })} style={{ cursor: 'zoom-in' }} /></div>}
+      <Picture src={q.image} alt={q.text || 'صورة'} className="q-img qt-wide" />
       {q.guiding_questions?.length > 0 && (
         <div className="qt-guide"><b>أسئلة تساعدك</b><ul>{q.guiding_questions.map((g, i) => <li key={i}>{g}</li>)}</ul></div>
       )}
@@ -741,12 +743,16 @@ function Listening({ q, value, onChange, readOnly, model }) {
     try { sessionStorage.setItem(key, n); } catch { /* */ }
   };
   const right = (model?.option_ids || []).map(s);
+  const playingNow = useIsPlaying(q.audio);
   return (
     <>
       {q.audio && !readOnly && (
         <div className="qt-listen">
-          <button type="button" className="qt-bigplay" disabled={left === 0} onClick={play}>▶</button>
-          <div>{left == null ? 'استمع جيداً ثم أجب' : left > 0 ? `مرات الاستماع المتبقية: ${left}` : 'انتهت مرات الاستماع'}</div>
+          <button type="button" className={'qt-bigplay' + (playingNow ? ' playing' : '')} disabled={left === 0} onClick={play}>{playingNow ? '❚❚' : '▶'}</button>
+          <div>
+            {left == null ? 'استمع جيداً ثم أجب' : left > 0 ? `مرات الاستماع المتبقية: ${left}` : 'انتهت مرات الاستماع'}
+            {left != null && <span className="snd-dots" style={{ marginTop: 6 }}>{Array.from({ length: q.max_plays }, (_, i) => <i key={i} className={i < left ? 'on' : ''} />)}</span>}
+          </div>
         </div>
       )}
       {q.answer_kind === 'choice' || q.options?.length ? (
@@ -756,8 +762,8 @@ function Listening({ q, value, onChange, readOnly, model }) {
             return (
               <button key={o.id} type="button" className={'option' + (on ? ' selected' : '') + (model ? (right.includes(s(o.id)) ? ' correct' : on ? ' wrong' : '') : '')} disabled={readOnly}
                 onClick={() => { clickSound(); onChange(s(o.id)); }}>
-                {o.image && <img src={o.image} alt="" className="qt-opt-img" />}<span style={{ flex: 1 }}>{o.text}</span>
-                {o.audio && <span className="qt-spk" onClick={(e) => { e.stopPropagation(); playClip(o.audio); }}>🔊</span>}
+                <Picture src={o.image} alt={o.text || 'صورة الخيار'} zoom={false} className="qt-opt-img" /><span style={{ flex: 1 }}>{o.text}</span>
+                <SoundButton src={o.audio} size="sm" label={o.text} className="qt-spk" />
               </button>
             );
           })}
@@ -821,7 +827,8 @@ function MediaResponse({ q, value, onChange, readOnly, model }) {
               return (
                 <button key={o.id} type="button" disabled={readOnly} className={'option' + (on ? ' selected' : '') + (model ? (right.includes(s(o.id)) ? ' correct' : on ? ' wrong' : '') : '')}
                   onClick={() => { clickSound(); onChange(s(o.id)); }}>
-                  {o.image && <img src={o.image} alt="" className="qt-opt-img" />}<span style={{ flex: 1 }}>{o.text}</span>
+                  <Picture src={o.image} alt={o.text || 'صورة الخيار'} zoom={false} className="qt-opt-img" /><span style={{ flex: 1 }}>{o.text}</span>
+                  <SoundButton src={o.audio} size="sm" label={o.text} />
                 </button>
               );
             })}

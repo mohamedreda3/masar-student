@@ -27,8 +27,8 @@ export const time12 = (t) => {
 };
 const byTime = (a, b) => String(a.time || '').localeCompare(String(b.time || ''));
 
-/* open_api → شاشة الفرونت */
-function routeOf(api) {
+/* open_api → شاشة الفرونت (تستخدمه الرئيسية أيضاً لمهام اليوم) */
+export function routeOf(api) {
   if (!api) return null;
   let m;
   if ((m = api.match(/\/(assignments|exams)\/(\d+)/))) return '/assignment?id=' + m[2];

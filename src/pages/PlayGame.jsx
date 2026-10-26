@@ -7,6 +7,8 @@ import GamePlayer, { GAMES } from '../games.jsx';
 import { clickSound, levelSound, isMuted, setMuted } from '../sounds.js';
 import { showToast } from '../toast.js';
 import { catColor, engineOf, starsOf } from '../gameMeta.js';
+import { Picture, SoundButton } from '../media.jsx';
+import { photoOnly } from '../api/useApi.js';
 
 /* صفحة اللعب — GameShell: هوية التصنيف · «كيف ألعب؟» · كتم · إعادة · تأكيد الخروج · شاشة احتفال
    GET /games/:id → GamePlayer → POST /games/:id/play مرة واحدة { score, max_score, mistakes, time_spent_seconds, completed } */
@@ -104,7 +106,12 @@ export default function PlayGame() {
               <button type="button" className="gs-ic" title={mute ? 'تشغيل الصوت' : 'كتم الصوت'} onClick={toggleMute}>{mute ? '🔇' : '🔊'}</button>
               {known && <button type="button" className="gs-ic" title="إعادة اللعبة" onClick={restart}>↺</button>}
             </div>
-            {howText && <div className="gs-how-line">{howText}</div>}
+            {(howText || G.audio) && (
+              <div className="gs-how-line">
+                <SoundButton src={G.audio} size="sm" label="طريقة اللعب" />
+                {howText}
+              </div>
+            )}
 
             <div className="card activity-card gs-stage">
               {known
@@ -141,10 +148,18 @@ export default function PlayGame() {
       {how && G && (
         <div className="gs-sheet-bg" onClick={() => setHow(false)}>
           <div className="gs-sheet" onClick={e => e.stopPropagation()}>
-            <div className="gs-sheet-ico">{E?.ico || '🎮'}</div>
+            {photoOnly(G.image) || photoOnly(G.activity?.thumbnail) || photoOnly(G.unit?.image)
+              ? <Picture src={photoOnly(G.image) || photoOnly(G.activity?.thumbnail) || photoOnly(G.unit?.image)} alt={G.title} className="gs-cover" />
+              : <div className="gs-sheet-ico">{E?.ico || '🎮'}</div>}
             <h3>كيف ألعب؟</h3>
             <p>{howText || 'اتبع التعليمات على الشاشة.'}</p>
             {G.instructions_en && <p className="en" dir="ltr">{G.instructions_en}</p>}
+            {G.audio && (
+              <div className="gs-how-audio">
+                <SoundButton src={G.audio} size="lg" label="طريقة اللعب" />
+                <span>اسمع طريقة اللعب · Listen</span>
+              </div>
+            )}
             <button className="btn btn-primary gs-big" onClick={() => { clickSound(); setHow(false); }}>فهمت 👍</button>
           </div>
         </div>

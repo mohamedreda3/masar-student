@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { dingSound, buzzSound, clickSound, playClip } from './sounds.js';
 import { shuffle, norm, normAr, ZONE_COLORS, useClock, Hud, DoneBox, useFinish, ShellCtx } from './gamekit.jsx';
+import { Picture, SoundButton } from './media.jsx';
 import { WordHunt, BalloonPop, WordSearch, OddOneOut, ListenPick, SoundSequence, PictureHunt, StoryOrder, StoryCloze } from './games-a.jsx';
 import { GrammarMaze, AnswerPlane, ErrorHunt, Tashkeel, RootFamily, SpeedDictation, ReadKaraoke, SpeakWheel, LetterForms, LetterTrace } from './games-b.jsx';
 
@@ -50,7 +51,7 @@ function MemoryMatch({ config, onDone }) {
             <button key={c.k} type="button" className={'g-mem-card side-' + c.side + (shown ? ' flip' : '') + (m ? ' gone' : '') + (bad.includes(c.k) ? ' bad' : '')} onClick={() => tap(c)} style={{ animationDelay: idx * 0.04 + 's' }}>
               <span className="in">
                 <span className="face back">{c.side === 'a' ? '👋' : '💬'}</span>
-                <span className="face front" dir="auto">{c.img ? <img src={c.img} alt="" className="mm-img" /> : c.text}</span>
+                <span className="face front" dir="auto">{c.img ? <Picture src={c.img} alt={c.text || 'صورة'} zoom={false} className="mm-img" /> : c.text}</span>
               </span>
             </button>
           );
@@ -114,11 +115,16 @@ export function DragDrop({ config, onDone }) {
           return (
             <div key={g} data-zone={g} className={'sw-bin' + (drag?.over === g ? ' hot' : '') + (fly === gi ? ' got' : '')} style={{ '--c': c }}>
               <button type="button" className="sw-bin-h" disabled={!cur || !!res} onClick={() => put(g)}>
-                <span>{g}</span><small>{inZone.length}</small>
+                <Picture src={config.groups_media?.[g]?.image} alt={g} zoom={false} className="sw-bin-pic" />
+                <span>{g}</span>
+                <SoundButton src={config.groups_media?.[g]?.audio} size="sm" label={g} />
+                <small>{inZone.length}</small>
               </button>
               <div className="sw-bin-b">
                 {inZone.map(x => (
-                  <button key={x.i} type="button" disabled={!!res} className={'sw-chip' + (res ? (x.group === g ? ' ok' : ' bad') : '')} onClick={() => back(x.i)} title={res ? '' : 'اضغط لإرجاعها'}>{x.text}</button>
+                  <button key={x.i} type="button" disabled={!!res} className={'sw-chip' + (res ? (x.group === g ? ' ok' : ' bad') : '')} onClick={() => back(x.i)} title={res ? '' : 'اضغط لإرجاعها'}>
+                    <Picture src={x.image} alt={x.text || 'صورة'} zoom={false} className="qt-chip-img" />{x.text}
+                  </button>
                 ))}
               </div>
             </div>
@@ -131,7 +137,9 @@ export function DragDrop({ config, onDone }) {
                 <div className="sw-stack" aria-hidden>{deck.slice(1, 3).map((x, k) => <i key={x.i} style={{ '--k': k + 1 }} />)}</div>
                 <div key={cur.i} className={'sw-card' + (drag ? ' dragging' : '')} onPointerDown={start}
                   style={drag ? { transform: `translate(${drag.dx}px, ${drag.dy}px) rotate(${drag.dx / 14}deg)` } : undefined}>
+                  <Picture src={cur.image} alt={cur.text || 'صورة'} zoom={false} className="sw-pic" />
                   {cur.text}
+                  <SoundButton src={cur.audio} size="sm" label={cur.text} className="sw-snd" />
                 </div>
                 <div className="g-tip">👆 اسحب البطاقة إلى مجموعتها — أو اضغط اسم المجموعة</div>
               </>
@@ -149,6 +157,7 @@ export function DragDrop({ config, onDone }) {
 /* ===== 3) puzzle — «سلّم الخطوات»: قائمة رأسية مرقّمة تُعاد ترتيبها بالسحب (أو بأسهم ↑↓) ===== */
 function Puzzle({ config, onDone }) {
   const pieces = config.pieces || [];
+  const media = config.pieces_media || [];
   const order = config.answer_order || pieces.map((_, i) => i);
   const [seq, setSeq] = useState(() => shuffle(pieces.map((_, i) => i)));
   const [drag, setDrag] = useState(null);   // { from, over, dy }
@@ -182,7 +191,9 @@ function Puzzle({ config, onDone }) {
             <div key={p} className={'lad-row' + (drag?.from === k ? ' dragging' : '') + st}
               style={drag?.from === k ? { transform: `translateY(${drag.dy}px) scale(1.03)` } : shift ? { transform: `translateY(${shift * 100}%)` } : undefined}>
               <span className="lad-n">{k + 1}</span>
+              <Picture src={media[p]?.image} alt={pieces[p] || 'صورة'} className="lad-pic" />
               <span className="lad-t">{pieces[p]}</span>
+              <SoundButton src={media[p]?.audio} size="sm" label={pieces[p]} />
               {!res && <>
                 <span className="lad-arrows">
                   <button type="button" disabled={k === 0} onClick={() => move(k, k - 1)}>▲</button>
@@ -237,7 +248,7 @@ function Scenes({ config, onDone }) {
           </div>
         ))}
         {typing && <div className="chat-msg owl"><img src="/img/owl.png" alt="" /><span className="dots"><i /><i /><i /></span></div>}
-        {!typing && s && log.length === i && !res && <div className="chat-msg owl fresh"><img src="/img/owl.png" alt="" /><span>{s.image && <img src={s.image} alt="" className="chat-img" />}{s.scene}<small>ماذا تقول؟</small></span></div>}
+        {!typing && s && log.length === i && !res && <div className="chat-msg owl fresh"><img src="/img/owl.png" alt="" /><span><Picture src={s.image} alt={s.scene || 'صورة'} className="chat-img" />{s.scene}<SoundButton src={s.audio} size="sm" label={s.scene} /><small>ماذا تقول؟</small></span></div>}
         <div ref={end} />
       </div>
       {!res && !typing && log.length === i && (
@@ -296,7 +307,8 @@ function SpeedQuiz({ config, onDone }) {
           <div className="in">
             <div className="face q">
               <span className="g-bolt">⚡</span>
-              <div className="g-scene-t">{q.q}</div>
+              <Picture src={q.image} alt={q.q || 'صورة السؤال'} className="qf-img" />
+              <div className="g-scene-t"><SoundButton src={q.audio} size="sm" label={q.q} />{q.q}</div>
               {q.options?.length ? (
                 <div className="g-tiles" style={{ marginTop: 12 }}>
                   {q.options.map((o, k) => <button key={o} type="button" className="g-tile" style={{ '--c': ['#3b82f6', '#f59e0b', '#10b981', '#ec4899'][k % 4] }} onClick={() => answer(o)}><span className="k">{k + 1}</span>{o}</button>)}
@@ -395,7 +407,7 @@ function WordBuilder({ config, onDone }) {
               </div>
             ))}
           </div>
-          <div className="wb-hint">{W.image && <img src={W.image} alt="" className="wb-img" />}{W.audio && <button type="button" className="duo-spk" onClick={() => playClip(W.audio)}>🔊</button>}{W.hint ? <b>💡 {W.hint}</b> : null} {[...w].length} حروف</div>
+          <div className="wb-hint"><Picture src={W.image} alt={W.hint || 'صورة الكلمة'} className="wb-img" /><SoundButton src={W.audio} size="sm" label={W.hint} />{W.hint ? <b>💡 {W.hint}</b> : null} {[...w].length} حروف</div>
         </div>
         <div className="wb-rack">
           {letters.map((l, n) => {

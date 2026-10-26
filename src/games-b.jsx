@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { dingSound, buzzSound, clickSound, playClip, popSound, stopAudio, tickTimer } from './sounds.js';
 import { shuffle, pickN, normAr, useClock, Hud, DoneBox, useFinish } from './gamekit.jsx';
+import { Picture, SoundButton } from './media.jsx';
 import { Lives } from './games-a.jsx';
 import { DragDrop } from './games.jsx';
 
@@ -58,7 +59,7 @@ function QuickFire({ config, onDone, skin }) {
       <Hud label="السؤال" done={i} total={qs.length} />
       {!res && <>
         <div className="qf-top"><Lives n={lives} max={maxLives} /><Ring left={left} total={config.seconds_per_question} size={44} /></div>
-        <div className={'qf-q ' + skin}>{Q.image && <img src={Q.image} alt="" className="qf-img" />}{Q.audio && <button type="button" className="duo-spk" onClick={() => playClip(Q.audio)}>🔊</button>}<span>{Q.q}</span></div>
+        <div className={'qf-q ' + skin}><Picture src={Q.image} alt={Q.q || 'صورة السؤال'} className="qf-img" /><SoundButton src={Q.audio} size="sm" label={Q.q} /><span>{Q.q}</span></div>
         {skin === 'maze' ? (
           <div className="mz-scene">
             <div className={'mz-walker' + (pick != null ? (pick === Q.answer_index ? ' go' : ' bump') : '')} style={{ '--col': pick != null && pick >= 0 ? pick : Math.floor(Q.options.length / 2), '--n': Q.options.length }}>🧒</div>
@@ -122,7 +123,8 @@ export function ErrorHunt({ config, onDone }) {
     <>
       <Hud label="الجملة" done={i} total={S.length} />
       {!res && <>
-        <div className="eh-court"><span className="gavel">⚖️</span><Ring left={left} total={config.seconds_per_sentence} size={44} /></div>
+        <div className="eh-court"><span className="gavel">⚖️</span><SoundButton src={cur.audio} size="sm" label={cur.text} /><Ring left={left} total={config.seconds_per_sentence} size={44} /></div>
+        <Picture src={cur.image} alt={cur.text || 'صورة الجملة'} className="g-item-pic" />
         <div className="hl-paper eh-sent" dir="rtl">
           {words.map((w, k) => {
             const st = tapIdx == null ? '' : k === cur.error_index ? ' err' : k === tapIdx ? ' bad' : '';
@@ -193,7 +195,8 @@ export function Tashkeel({ config, onDone }) {
     <>
       <Hud label="الكلمة" done={i} total={W.length} />
       {!res && <>
-        <div className="qf-top"><span className="qt-muted">اختر الحرف ثم الحركة</span><Ring left={left} total={config.seconds_per_word} size={44} /></div>
+        <div className="qf-top"><span className="qt-muted">اختر الحرف ثم الحركة</span><SoundButton src={cur.audio} size="sm" label={cur.base} /><Ring left={left} total={config.seconds_per_word} size={44} /></div>
+        <Picture src={cur.image} alt={cur.base || 'صورة الكلمة'} className="g-item-pic" />
         <div className="tk-board" dir="rtl">
           {letters.map((ch, k) => (
             <button key={k} type="button" className={'tk-letter' + (sel === k ? ' sel' : '') + (checked ? (checked[k] ? ' ok' : ' bad') : '')} onClick={() => { clickSound(); setSel(k); }}>
@@ -217,7 +220,8 @@ export function RootFamily({ config, onDone }) {
   const NO = 'لا تنتمي';
   const cfg = useMemo(() => ({
     groups: [...(config.groups || []).map(g => g.root), ...(config.distractors?.length ? [NO] : [])],
-    items: [...(config.groups || []).flatMap(g => g.words.map(w => ({ text: w, group: g.root }))), ...(config.distractors || []).map(w => ({ text: w, group: NO }))],
+    groups_media: Object.fromEntries((config.groups || []).map(g => [g.root, { image: g.image, audio: g.audio }])),
+    items: [...(config.groups || []).flatMap(g => g.words.map(w => (typeof w === 'string' ? { text: w, group: g.root } : { ...w, group: g.root }))), ...(config.distractors || []).map(w => (typeof w === 'string' ? { text: w, group: NO } : { ...w, group: NO }))],
     time_limit_seconds: config.time_limit_seconds,
   }), [config]);
   return <DragDrop config={cfg} onDone={onDone} />;
@@ -263,7 +267,7 @@ export function SpeedDictation({ config, onDone }) {
             <button type="button" className="qt-bigplay" disabled={max && plays >= max} onClick={play}>🔊</button>
             <Ring left={left} total={config.seconds_per_item} />
           </div>
-          {it.image && <img src={it.image} alt="" className="sd-img" />}
+          <Picture src={it.image} alt="صورة" className="sd-img" />
           <div className={'sd-paper' + (verdict ? ' ' + verdict : '')}>
             <input ref={inp} dir="rtl" value={txt} onChange={e => setTxt(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} placeholder="اكتب ما تسمعه…" disabled={!!verdict} />
           </div>
@@ -328,7 +332,12 @@ export function ReadKaraoke({ config, onDone }) {
     <>
       <Hud label="الكلمات" done={Math.max(0, idx + 1)} total={words.length} />
       {!res && <>
-        {config.audio && idx < 0 && <div style={{ textAlign: 'center', marginTop: 10 }}><button type="button" className="hint-btn" onClick={() => playClip(config.audio)}>🎧 استمع للنموذج أولاً</button></div>}
+        {idx < 0 && (config.audio || config.image) && (
+          <div className="rk-intro">
+            <Picture src={config.image} alt="صورة النص" />
+            {config.audio && <><SoundButton src={config.audio} size="md" label="القراءة النموذجية" /><span className="qt-muted">استمع للنموذج أولاً</span></>}
+          </div>
+        )}
         <div className="rk-stage" dir="rtl">
           {words.map((w, k) => (
             <span key={k} className={'rk-w' + (k === idx ? ' on' : k < idx ? ' done' : '')}>{k === idx && <i className="rk-ball" />}{w}</span>
@@ -394,8 +403,9 @@ export function SpeakWheel({ config, onDone }) {
         {phase === 'spin' && <div style={{ textAlign: 'center' }}><button className="btn btn-primary g-check" onClick={spin}>🎡 دوّر العجلة</button></div>}
         {phase === 'talk' && topic && (
           <div className="sw-talk">
-            {topic.image && <img src={topic.image} alt="" />}
+            <Picture src={topic.image} alt={topic.text || 'صورة الموضوع'} />
             <b>{topic.text}</b>
+            <SoundButton src={topic.audio} size="sm" label={topic.text} />
             <div className="sw-talk-row"><Ring left={left} total={total} size={64} /><Meter lvl={mic.lvl} /></div>
             <span className="qt-muted">🎤 تحدّث حتى تنتهي الدائرة</span>
           </div>
@@ -436,7 +446,8 @@ export function LetterForms({ config, onDone }) {
       {!res && <>
         <div className="lf-board">
           <span className="lf-big">{cur.letter}</span>
-          {cur.audio && <button type="button" className="duo-spk" onClick={() => playClip(cur.audio)}>🔊</button>}
+          <Picture src={cur.image} alt={cur.example_word || cur.letter} className="lf-pic" />
+          <SoundButton src={cur.audio} size="md" label={cur.letter} />
         </div>
         <div className="lf-ask">{FORM_LBL[plan[i]]}{cur.example_word ? <small> · مثل: {cur.example_word}</small> : null}</div>
         <div className="ey-grid n3">
@@ -496,7 +507,7 @@ export function LetterTrace({ config, onDone }) {
       <Hud label="الحرف" done={i} total={L.length} />
       {!res && <>
         <div className="lt-board">
-          {cur.audio && <button type="button" className="duo-spk tr-spk" onClick={() => playClip(cur.audio)}>🔊</button>}
+          <SoundButton src={cur.audio} size="md" label={cur.letter} className="tr-spk" />
           <div className="lt-sheet" style={cur.guide_image ? { backgroundImage: `url("${cur.guide_image}")` } : undefined}>
             {!cur.guide_image && <svg className="lt-guide" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid meet" aria-hidden><text x="200" y="135" textAnchor="middle" dominantBaseline="middle" direction="rtl">{cur.letter}</text></svg>}
             <canvas ref={cv} key={i} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerLeave={up} />

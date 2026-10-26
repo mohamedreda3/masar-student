@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { dingSound, buzzSound, clickSound, playClip, popSound, stopAudio } from './sounds.js';
 import { shuffle, pickN, useClock, Hud, DoneBox, useFinish } from './gamekit.jsx';
+import { Picture, SoundButton } from './media.jsx';
 import { DropdownFill } from './QTypes.jsx';
 
 /* محركات الألعاب (1): المفردات · الاستماع · القراءة
@@ -86,8 +87,8 @@ export function WordHunt({ config, onDone }) {
       <Hud label="الجولة" done={r} total={rounds} />
       {!res && <>
         <div className={'wh-prompt' + (flash ? ' ' + flash : '')}>
-          {config.prompt === 'audio' ? <button type="button" className="duo-spk" onClick={() => playClip(it.audio)}>🔊</button>
-            : config.prompt === 'image' && it.image ? <img src={it.image} alt="" /> : <b>{it.meaning}</b>}
+          {config.prompt === 'audio' ? <SoundButton src={it.audio} size="md" label={it.meaning} />
+            : config.prompt === 'image' && it.image ? <Picture src={it.image} alt={it.meaning || 'صورة'} /> : <b>{it.meaning}</b>}
           <span>اصطد الكلمة!</span>
         </div>
         <Fuse left={left} total={config.seconds_per_round || 10} />
@@ -150,7 +151,7 @@ export function BalloonPop({ config, onDone }) {
     <>
       <Hud label="المعاني" done={right} total={pairs.length} clock={clock} />
       {!res && <>
-        <div className="bp-top"><span className="bp-meaning">{cur.image && <img src={cur.image} alt="" />}{cur.meaning}</span><Lives n={lives} /></div>
+        <div className="bp-top"><span className="bp-meaning"><Picture src={cur.image} alt={cur.meaning || 'صورة'} />{cur.meaning}<SoundButton src={cur.audio} size="sm" label={cur.meaning} /></span><Lives n={lives} /></div>
         <div className="bp-sky">
           <i className="cloud c1" /><i className="cloud c2" />
           {balloons.map(b => (
@@ -191,6 +192,7 @@ function buildGrid(words, n, dirs) {
 }
 export function WordSearch({ config, onDone }) {
   const words = (config.words || []).map(w => String(w).replace(/\s+/g, ''));
+  const wMedia = (w) => (config.words_media || [])[(config.words || []).findIndex(x => String(x).replace(/\s+/g, '') === w)] || null;
   const n = Math.max(config.grid_size || 8, ...words.map(w => w.length));
   const { g, placed } = useMemo(() => buildGrid(words, n, config.directions), [config]); // eslint-disable-line react-hooks/exhaustive-deps
   const [found, setFound] = useState([]);
@@ -241,7 +243,13 @@ export function WordSearch({ config, onDone }) {
         </div>
         {config.show_list !== false && (
           <div className="ws-list">
-            {placed.map(p => <span key={p.w} className={found.includes(p.w) ? 'done' : ''}>{found.includes(p.w) ? '✓ ' : ''}{p.w}</span>)}
+            {placed.map(p => (
+              <span key={p.w} className={found.includes(p.w) ? 'done' : ''}>
+                <Picture src={wMedia(p.w)?.image} alt={p.w} className="ws-pic" />
+                {found.includes(p.w) ? '✓ ' : ''}{p.w}
+                <SoundButton src={wMedia(p.w)?.audio} size="sm" label={p.w} />
+              </span>
+            ))}
             {!res && <button type="button" className="hint-btn" onClick={hint}>💡 تلميح</button>}
           </div>
         )}
@@ -272,10 +280,23 @@ export function OddOneOut({ config, onDone }) {
       <Hud label="الجولة" done={r} total={rounds.length} />
       {!res && <>
         <Fuse left={left} total={config.seconds_per_round} />
+        {(R.image || R.audio) && (
+          <div className="oo-media">
+            <Picture src={R.image} alt={R.hint || 'صورة الجولة'} />
+            <SoundButton src={R.audio} size="md" label="الجولة" />
+          </div>
+        )}
         <div className="oo-shelf">
           {R.words.map((w, k) => {
             const st = pick == null ? '' : k === R.odd_index ? ' ok' : k === pick ? ' bad' : ' dim';
-            return <button key={k} type="button" className={'oo-jar' + st} onClick={() => tap(k)} style={{ animationDelay: k * 0.06 + 's' }}><span>{w}</span></button>;
+            const M = (R.words_media || [])[k] || null;
+            return (
+              <button key={k} type="button" className={'oo-jar' + st} onClick={() => tap(k)} style={{ animationDelay: k * 0.06 + 's' }}>
+                <Picture src={M?.image} alt={w} zoom={false} />
+                <span>{w}</span>
+                <SoundButton src={M?.audio} size="sm" label={w} />
+              </button>
+            );
           })}
         </div>
         {pick != null && pick !== R.odd_index && R.hint && <div className="g-answer">💡 {R.hint}</div>}
@@ -322,7 +343,7 @@ export function ListenPick({ config, onDone }) {
           {R.options.map((o, k) => {
             const st = pick == null ? '' : o.is_correct ? ' ok' : pick === o.id ? ' bad' : ' dim';
             return pics
-              ? <button key={o.id} type="button" className={'ey-card' + (o.image ? ' pic' : '') + st + (pick === o.id ? ' on' : '')} onClick={() => tap(o)}>{o.image ? <img src={o.image} alt="" /> : <span className="ey-word">{o.text}</span>}</button>
+              ? <button key={o.id} type="button" className={'ey-card' + (o.image ? ' pic' : '') + st + (pick === o.id ? ' on' : '')} onClick={() => tap(o)}>{o.image ? <Picture src={o.image} alt={o.text || 'صورة'} zoom={false} /> : <span className="ey-word">{o.text}</span>}<SoundButton src={o.audio} size="sm" label={o.text} /></button>
               : <button key={o.id} type="button" className={'g-tile' + st} style={{ '--c': ['#0ea5e9', '#f59e0b', '#10b981', '#ec4899'][k % 4] }} onClick={() => tap(o)}><span className="k">{k + 1}</span>{o.text}</button>;
           })}
         </div>
@@ -376,7 +397,7 @@ export function SoundSequence({ config, onDone }) {
         <div className="ss-drums">
           {sounds.map((s, k) => (
             <button key={s.id ?? k} type="button" className={'ss-drum' + (lit === k ? ' lit' : '')} style={{ '--c': DRUMS[k % DRUMS.length] }} onClick={() => tap(k)} disabled={phase !== 'input'}>
-              {s.image ? <img src={s.image} alt="" /> : <span>{s.label}</span>}
+              {s.image ? <Picture src={s.image} alt={s.label || 'صورة'} zoom={false} /> : <span>{s.label}</span>}
             </button>
           ))}
         </div>
@@ -414,7 +435,7 @@ export function PictureHunt({ config, onDone }) {
     <>
       <Hud label="الكنوز" done={found.length} total={targets.length} />
       {!res && <>
-        <div className="ph-prompt">🗺️ ابحث عن: {config.prompt !== 'label' && T.audio ? <button type="button" className="duo-spk" onClick={() => playClip(T.audio)}>🔊</button> : <b>{T.label}</b>}</div>
+        <div className="ph-prompt">🗺️ ابحث عن: {config.prompt !== 'label' && T.audio ? <SoundButton src={T.audio} size="md" label={T.label} /> : <b>{T.label}</b>}{T.image && <Picture src={T.image} alt={T.label || 'صورة'} className="ph-pic" />}</div>
         <Fuse left={left} total={config.seconds_per_target} />
         <div className="hs-frame ph-map">
           <div className="qt-pimg-in" ref={img} onClick={tap} style={{ cursor: 'crosshair' }}>
@@ -470,7 +491,7 @@ export function StoryOrder({ config, onDone }) {
             <div key={p} className={'so-page' + st + (drag?.from === k ? ' dragging' : '') + (playing === p ? ' play' : '')}
               style={drag?.from === k ? { transform: `translateY(${drag.dy}px) rotate(-1deg)` } : undefined} onPointerDown={res ? undefined : (e) => start(e, k)}>
               <span className="so-n">{k + 1}</span>
-              {config.show_images !== false && pg.image && <img src={pg.image} alt="" />}
+              {config.show_images !== false && pg.image && <Picture src={pg.image} alt={pg.text || 'صورة'} zoom={false} />}
               <span className="so-t">{pg.text}</span>
             </div>
           );
@@ -498,7 +519,12 @@ export function StoryCloze({ config, onDone }) {
   return (
     <>
       <Hud label="الفراغات" done={filled} total={blanks.length} />
-      {config.audio && <div style={{ textAlign: 'center', marginTop: 10 }}><button type="button" className="duo-spk" onClick={() => playClip(config.audio)}>🔊</button></div>}
+      {(config.audio || config.image) && (
+        <div className="sc-media">
+          <Picture src={config.image} alt="صورة القصة" />
+          <SoundButton src={config.audio} size="md" label="سرد القصة" />
+        </div>
+      )}
       <div className="sc-scroll">
         <DropdownFill q={{ text: config.text, blanks }} value={v} onChange={(x) => setV(x || {})} readOnly={!!res} model={model} />
       </div>

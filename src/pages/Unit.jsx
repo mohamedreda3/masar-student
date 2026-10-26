@@ -200,7 +200,7 @@ export default function Unit() {
                   {l.status === 'locked'
                     ? <button className="off" disabled>🔒 مقفل</button>
                     : <button className={l.status === 'done' ? 'review' : 'continue'} onClick={() => openLesson(l.id, l.status === 'done')}>
-                        {l.status === 'done' ? '↺ راجع الدرس' : '▵ تابع الدرس'}
+                        {l.status === 'done' ? '↺ راجع الدرس' : '⏵ تابع الدرس'}
                       </button>}
                 </div>
               </div>

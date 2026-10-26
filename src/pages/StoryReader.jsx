@@ -4,6 +4,7 @@ import { Logo, Empty } from '../components.jsx';
 import api from '../api/client.js';
 import { useApi, useHome, unitArt, usePageTitle } from '../api/useApi.js';
 import QuestionBody, { realImg, isAnswered } from '../QuestionBody.jsx';
+import { GoalsIntro } from '../QuestionGoals.jsx';
 import { playClip, clickSound, winSound, stopAudio } from '../sounds.js';
 import { showToast } from '../toast.js';
 
@@ -184,6 +185,7 @@ export default function StoryReader({ id }) {
             </div>
             <div className="card activity-card" style={{ marginTop: 22, maxWidth: 980, marginInline: 'auto' }}>
               <div style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--mute)' }}>أسئلة الفهم 🧠{q?.points ? ` · ${q.points} درجة` : ''}</div>
+              {qi === 0 && <GoalsIntro questions={qs} title="في هذه الأسئلة ستتعلم" />}
               {q && <div key={q.id} style={{ animation: 'gIn .35s' }}>
                 <QuestionBody q={q} value={answers[q.id]} onChange={(v) => setAnswers(a => ({ ...a, [q.id]: v }))} />
               </div>}

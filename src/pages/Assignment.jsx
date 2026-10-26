@@ -4,6 +4,7 @@ import { StatsBar, SecHead, Empty, FooterStrip } from '../components.jsx';
 import api from '../api/client.js';
 import { useApi, useHome, activityLink, usePageTitle } from '../api/useApi.js';
 import QuestionBody, { realImg, isAnswered } from '../QuestionBody.jsx';
+import { GoalsIntro } from '../QuestionGoals.jsx';
 import AssignmentResult from './AssignmentResult.jsx';
 import { openFile } from '../FileViewer.jsx';
 import { clickSound, winSound } from '../sounds.js';
@@ -149,6 +150,7 @@ export default function Assignment() {
               {A.current_attempt?.ends_at && !finished && <Countdown endsAt={A.current_attempt.ends_at} onZero={() => submit(true)} />}
             </div>
             {A.description && <p style={{ marginTop: 14 }}>{A.description}</p>}
+            {!finished && <GoalsIntro questions={questions} title={`في ${W} ستتعلم`} />}
             {A.blocked_reason && (
               <div className="explain-box no" style={{ marginTop: 14 }}><div><span className="h">غير متاح</span>{A.blocked_reason}</div></div>
             )}
@@ -304,7 +306,7 @@ export default function Assignment() {
                       {ansOf(q.id).is_correct === true ? '✓ صحيحة' : ansOf(q.id).is_correct === false ? '✗ خاطئة' : '⏳ بانتظار المعلم'}{ansOf(q.id).points != null && ansOf(q.id).max_points != null ? ` · ${ansOf(q.id).points}/${ansOf(q.id).max_points}` : ''}</span>}
                     {q.hint && !finished && <button className="hint-btn" onClick={() => showToast(q.hint, '💡')}>💡 تلميح</button>}
                   </div>
-                  <QuestionBody q={q} value={answers[q.id] ?? ansOf(q.id)?.answer ?? q.saved_answer ?? undefined} readOnly={finished || !started}
+                  <QuestionBody q={q} timed={!!A.current_attempt?.ends_at && !finished} value={answers[q.id] ?? ansOf(q.id)?.answer ?? q.saved_answer ?? undefined} readOnly={finished || !started}
                     onChange={(v) => setAnswers(a => ({ ...a, [q.id]: v }))} />
                 </div>
               ))}

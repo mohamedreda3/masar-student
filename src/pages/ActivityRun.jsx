@@ -3,10 +3,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Logo, Empty } from '../components.jsx';
 import api from '../api/client.js';
 import { useApi, useHome, activityLink, usePageTitle } from '../api/useApi.js';
-import { dingSound, winSound, clickSound, playClip } from '../sounds.js';
+import { dingSound, winSound, clickSound, stopAudio } from '../sounds.js';
 import { showToast } from '../toast.js';
 
 import QuestionBody, { realImg, isAnswered } from '../QuestionBody.jsx';
+import { Picture, SoundButton } from '../media.jsx';
+import { GoalsIntro } from '../QuestionGoals.jsx';
 import QMap from '../QMap.jsx';
 import GamePlayer from '../games.jsx';
 
@@ -86,6 +88,7 @@ export default function ActivityRun({ lessonId, activityId, assignment, library 
   const [answers, setAnswers] = useState({});   // question_id → answer
   const [audios, setAudios] = useState({});     // pronunciation_id → Blob
   const [busy, setBusy] = useState(false);
+  const [intro, setIntro] = useState(true);    // بطاقة «في هذا النشاط ستتعلم» قبل أول خطوة
   const [flipped, setFlipped] = useState({});  // flashcard id → مقلوبة؟
   const [flags, setFlags] = useState({});      // أسئلة مُعلَّمة للمراجعة
   const [known, setKnown] = useState({});      // flashcard id → أعرفها؟
@@ -191,6 +194,19 @@ export default function ActivityRun({ lessonId, activityId, assignment, library 
           />
         )}
 
+        {i === 0 && (A.thumbnail || A.voice) && (
+          <div className="ac-intro">
+            <Picture src={realImg(A.thumbnail)} alt={A.title} className="ac-cover" />
+            {A.voice && (
+              <div className="ac-voice">
+                <SoundButton src={A.voice} size="md" label="تعليمات النشاط" />
+                <span>اسمع التعليمات · Listen to the instructions</span>
+              </div>
+            )}
+          </div>
+        )}
+        {i === 0 && intro && <GoalsIntro questions={A.questions || []} onStart={() => setIntro(false)} />}
+
         <div className="card activity-card" style={{ marginTop: 22 }}>
           <div className="ac-top">
             {it.hint && <button className="hint-btn" onClick={() => showToast(it.hint, '💡')}>💡 تلميح</button>}
@@ -204,14 +220,15 @@ export default function ActivityRun({ lessonId, activityId, assignment, library 
 
           {it.kind === 'pron' && (
             <>
-              {it.reference_image && <div className="q-img"><img loading="lazy" decoding="async" src={it.reference_image} alt="" /></div>}
+              <Picture src={it.reference_image} alt={it.text || 'صورة الكلمة'} className="q-img" />
               <div className="q-title">{it.text}</div>
               <div className="q-en">{it.text_en} · <span dir="ltr">[{it.phonetic}]</span></div>
-              <div className="audio-player">
-                <button className="audio-play" onClick={() => playClip(it.reference_audio)}>▶</button>
-                <div className="audio-track"><div className="bar"><i style={{ width: '25%' }} /></div></div>
-                <span className="speed-lab">استمع للنطق الصحيح ثم سجّل صوتك</span>
-              </div>
+              {it.reference_audio && (
+                <div className="q-listen">
+                  <SoundButton src={it.reference_audio} size="lg" label={it.text} />
+                  <span className="speed-lab">اسمع النطق الصحيح ثم سجّل صوتك</span>
+                </div>
+              )}
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 16, flexWrap: 'wrap' }}>
                 <Recorder has={!!audios[it.id]} onDone={(b) => { dingSound(); setAudios(a => ({ ...a, [it.id]: b })); }} />
                 {audios[it.id] && <button className="btn btn-ghost" onClick={() => new Audio(URL.createObjectURL(audios[it.id])).play()}>🔊 استمع لتسجيلك</button>}
@@ -226,23 +243,23 @@ export default function ActivityRun({ lessonId, activityId, assignment, library 
               {/* بطاقة فلاش حقيقية: اضغط عليها لتنقلب (وجه = الكلمة، ظهر = المعنى) */}
               <div className={"fcard" + (flipped[it.id] ? " flipped" : "")} key={it.id} role="button" tabIndex={0}
                 aria-label={flipped[it.id] ? "اضغط لرؤية الكلمة" : "اضغط لرؤية المعنى"}
-                onClick={() => { clickSound(); setFlipped(f => ({ ...f, [it.id]: !f[it.id] })); }}
+                onClick={() => { clickSound(); stopAudio(); setFlipped(f => ({ ...f, [it.id]: !f[it.id] })); }}
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setFlipped(f => ({ ...f, [it.id]: !f[it.id] })); } }}>
                 <div className="fcard-in">
                   <div className="fcard-face front">
                     <span className="fcard-tag">الكلمة · Word</span>
-                    {it.front_image && <img src={it.front_image} alt="" />}
+                    <Picture src={it.front_image} alt={it.front_text || 'صورة'} zoom={false} />
                     <div className="w">{it.front_text}</div>
                     <div className="e">{it.front_text_en}</div>
-                    {it.front_audio && <button className="fcard-snd" onClick={(e) => { e.stopPropagation(); playClip(it.front_audio); }} aria-label="استمع للكلمة">🔊</button>}
+                    <SoundButton src={it.front_audio} size="sm" label={it.front_text} className="fcard-snd" />
                     <span className="fcard-hint">👆 اضغط لتقلب البطاقة</span>
                   </div>
                   <div className="fcard-face back">
                     <span className="fcard-tag">المعنى · Meaning</span>
-                    {it.back_image && <img src={it.back_image} alt="" />}
+                    <Picture src={it.back_image} alt={it.back_text || 'صورة'} zoom={false} />
                     <div className="w">{it.back_text}</div>
                     {it.back_text_en && it.back_text_en !== it.front_text_en && <div className="e">{it.back_text_en}</div>}
-                    {it.back_audio && <button className="fcard-snd" onClick={(e) => { e.stopPropagation(); playClip(it.back_audio); }} aria-label="استمع للمعنى">🔊</button>}
+                    <SoundButton src={it.back_audio} size="sm" label={it.back_text} className="fcard-snd" />
                     <span className="fcard-hint">👆 اضغط للعودة للكلمة</span>
                   </div>
                 </div>

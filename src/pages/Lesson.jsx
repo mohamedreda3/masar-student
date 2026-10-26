@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Logo, Empty, SecHead } from '../components.jsx';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api/client.js';
-import { useApi, useHome, activityLink, ST, usePageTitle } from '../api/useApi.js';
+import { useApi, useHome, activityLink, ST, photoOnly, usePageTitle } from '../api/useApi.js';
 import { playClip, dingSound, buzzSound, clickSound } from '../sounds.js';
 import { showToast } from '../toast.js';
+import QuestionGoals from '../QuestionGoals.jsx';
 import ActivityLibrary from './ActivityLibrary.jsx';
 import { StoryCard } from './Library.jsx';
 
@@ -124,16 +125,25 @@ function Activity({ P }) {
         </p>
       )}
 
-      {/* فقرة لكل متحدث، بترجمة هوفر وصوت للفقرة */}
-      {(pass?.paragraphs || []).map(p => (
-        <div className="passage" key={p.index} style={{ marginTop: 10 }}>
-          <b style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-            {p.icon} {p.speaker}
-            {p.audio && <button className="sound-btn" style={{ width: 30, height: 30, fontSize: 13 }} onClick={() => playClip(p.audio, parseFloat(speed))} aria-label={'استمع: ' + p.speaker}>🔊</button>}
-          </b>
-          <span className="tr-hover" data-tr={p.text_en}>{p.text}</span>
+      {/* الحوار — فقاعات محادثة: كل متحدث في جهة، بترجمة هوفر وصوت لفقرته */}
+      {pass?.paragraphs?.length > 0 && (
+        <div className="dlg">
+          {pass.paragraphs.map((p, i) => (
+            <div className={'dlg-row' + (i % 2 ? ' alt' : '')} key={p.index}>
+              <span className="av">{p.icon}</span>
+              <div className="dlg-main">
+                <div className="who">
+                  <span className="nm">{p.speaker}</span>
+                  {p.audio && <button className="sound-btn" onClick={() => playClip(p.audio, parseFloat(speed))} aria-label={'استمع: ' + p.speaker}>🔊</button>}
+                </div>
+                <div className="passage bubble">
+                  <span className="tr-hover" data-tr={p.text_en}>{p.text}</span>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
 
       {(pass?.audio || pass?.paragraphs?.length > 0) && (
         <div className="audio-player">
@@ -157,23 +167,26 @@ function Activity({ P }) {
         <div style={{ marginTop: 18 }}>
           <h4 style={{ fontSize: 15.5 }}>{task.title} ✓✗</h4>
           <div className="en" style={{ fontSize: 11, color: 'var(--mute)' }}>{task.instruction}</div>
-          {qs.map(q => {
-            const mine = tf[q.id];
-            const ok = isRight(q.id);
-            const graded = ok !== undefined;
-            const cls = (v) => 'option' + (mine === v && graded ? (ok ? ' correct' : ' wrong') : mine === v ? ' selected' : '');
-            return (
-              <div key={q.id} style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
-                <span style={{ flex: 1, fontWeight: 700, fontSize: 14.5, minWidth: 200 }}>
-                  <span className="tr-hover" data-tr={q.text_en}>{q.text}</span>
-                </span>
-                {q.audio && <button className="sound-btn" onClick={() => playClip(q.audio)} aria-label="استمع للسؤال">🔊</button>}
-                <button className={cls('true')} style={{ padding: '8px 18px' }} disabled={!!res || mine !== undefined} onClick={() => answerTf(q, 'true')}>صح ✓</button>
-                <button className={cls('false')} style={{ padding: '8px 18px' }} disabled={!!res || mine !== undefined} onClick={() => answerTf(q, 'false')}>خطأ ✗</button>
-                {graded && <span style={{ fontSize: 18 }}>{ok ? '🌟' : '👣'}</span>}
-              </div>
-            );
-          })}
+          <div className="tf-list">
+            {qs.map((q, i) => {
+              const mine = tf[q.id];
+              const ok = isRight(q.id);
+              const graded = ok !== undefined;
+              const cls = (v) => 'option' + (mine === v && graded ? (ok ? ' correct' : ' wrong') : mine === v ? ' selected' : '');
+              return (
+                <div key={q.id} className={'tf-row' + (graded ? (ok ? ' correct' : ' wrong') : '')}>
+                  <span className="n">{i + 1}</span>
+                  <span className="q"><span className="tr-hover" data-tr={q.text_en}>{q.text}</span></span>
+                  {q.audio && <button className="sound-btn" onClick={() => playClip(q.audio)} aria-label="استمع للسؤال">🔊</button>}
+                  <span className="tf-ans">
+                    <button className={cls('true')} disabled={!!res || mine !== undefined} onClick={() => answerTf(q, 'true')}>صح ✓</button>
+                    <button className={cls('false')} disabled={!!res || mine !== undefined} onClick={() => answerTf(q, 'false')}>خطأ ✗</button>
+                  </span>
+                  <QuestionGoals question={q} />
+                </div>
+              );
+            })}
+          </div>
           {res && (
             <div className="eng-note" style={{ marginTop: 10, fontWeight: 700 }}>
               نتيجتك: {res.correct_count ?? res.answers?.filter(a => a.is_correct).length} من {res.questions_count ?? qs.length}
@@ -226,7 +239,7 @@ function Tools({ P }) {
       )}
 
       {phrases.length > 0 && (
-        <div className="side-card tool-card" id="tool-phrases">
+        <div className="side-card tool-card tc-blue" id="tool-phrases">
           <div className="head">
             <img src="/img/speech.png" alt="" />
             <div>
@@ -247,7 +260,7 @@ function Tools({ P }) {
       )}
 
       {vocab.length > 0 && (
-        <div className="side-card tool-card" id="tool-vocab">
+        <div className="side-card tool-card tc-green" id="tool-vocab">
           <div className="head">
             <img src="/img/flashcards.png" alt="" />
             <div>
@@ -256,20 +269,24 @@ function Tools({ P }) {
             </div>
           </div>
           <div className="vocab-grid">
-            {vocab.map(v => (
-              <div className="vocab-card" key={v.id}>
-                <div className="img"><img loading="lazy" decoding="async" src={realImg(v.front_image) || '/img/logo-masar.svg'} alt="" /></div>
-                <div className="ar">{v.front_text}</div>
-                <div className="tr">{v.front_text_en}</div>
-                {v.front_audio && <button className="sound-btn" onClick={() => playClip(v.front_audio)} aria-label={'استمع: ' + v.front_text}>🔊</button>}
-              </div>
-            ))}
+            {vocab.map(v => {
+              const photo = photoOnly(v.front_image);
+              return (
+                <button type="button" className="vocab-card" key={v.id} disabled={!v.front_audio}
+                  onClick={() => playClip(v.front_audio)} aria-label={v.front_audio ? 'استمع: ' + v.front_text : v.front_text}>
+                  {photo && <span className="img"><img loading="lazy" decoding="async" src={photo} alt="" /></span>}
+                  <span className="ar">{v.front_text}</span>
+                  <span className="tr">{v.front_text_en}</span>
+                  {v.front_audio && <span className="sound-btn" aria-hidden="true">🔊</span>}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
       {pw && (
-        <div className="side-card tool-card" id="tool-pron">
+        <div className="side-card tool-card tc-purple" id="tool-pron">
           <div className="head">
             <img src="/img/mic.png" alt="" />
             <div>
@@ -277,24 +294,25 @@ function Tools({ P }) {
               <div className="en">Pronunciation Support</div>
             </div>
           </div>
-          <div style={{ background: 'var(--lav-soft)', borderRadius: 14, padding: '16px 18px', marginTop: 12, display: 'flex', alignItems: 'center', gap: 14 }}>
-            <button className="audio-play" style={{ width: 52, height: 52, flexShrink: 0 }} aria-label="استمع للنطق" onClick={() => playClip(pw.reference_audio)}>🔊</button>
-            <div style={{ flex: 1, textAlign: 'center' }}>
-              <div style={{ fontWeight: 900, fontSize: 22 }}>{pw.text}</div>
-              <div style={{ fontSize: 13, color: 'var(--mute)', direction: 'ltr' }}>[{pw.phonetic}]</div>
+          <div className="pron-box">
+            <button className="audio-play" aria-label="استمع للنطق" onClick={() => playClip(pw.reference_audio)}>🔊</button>
+            <div className="w">
+              <div className="t">{pw.text}</div>
+              <div className="ph">[{pw.phonetic}]</div>
             </div>
-            {pron.length > 1 && <button className="sound-btn" onClick={() => { clickSound(); setPi((pi + 1) % pron.length); }} aria-label="الكلمة التالية">↻</button>}
+            {pron.length > 1 && (
+              <button className="sound-btn nx" onClick={() => { clickSound(); setPi((pi + 1) % pron.length); }}
+                aria-label="الكلمة التالية" title={`كلمة أخرى (${pi + 1}/${pron.length})`}>↻</button>
+            )}
           </div>
           {pw.hint && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, fontSize: 12.5, fontWeight: 700, color: 'var(--brand-ink)', background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 12, padding: '10px 14px' }}>
-              <span>🗣</span> {pw.hint}
-            </div>
+            <div className="pron-hint"><span>🗣</span> {pw.hint}</div>
           )}
         </div>
       )}
 
       {g && (
-        <div className="side-card tool-card" id="tool-grammar">
+        <div className="side-card tool-card tc-gold" id="tool-grammar">
           <div className="head">
             <img src="/img/book.png" alt="" />
             <div>
