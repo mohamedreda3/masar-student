@@ -238,7 +238,7 @@ function MySkills() {
         {skillProgress.map(sp => {
           const S = SKILLS[sp.skill];
           return (
-            <Link to={'/activity/' + sp.skill} className="home-skill" key={sp.skill} style={{ '--sc': S.color }}>
+            <Link to={'/skills?skill=' + sp.skill} className="home-skill" key={sp.skill} style={{ '--sc': S.color }}>
               <div className="hs-side">
                 <div className="hs-head">
                   <img src={S.ico} alt="" />

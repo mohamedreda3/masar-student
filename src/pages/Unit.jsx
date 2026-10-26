@@ -55,6 +55,9 @@ function VideoModal({ onClose, poster, src, U, title }) {
   );
 }
 
+/* عنوان الدرس داخل البطاقة — رقم الدرس يظهر في الشارة، فلا نكرّره في النص */
+const lessonTitle = (l) => String(l.ar || '').replace(/^\s*الدرس\s+[^—–-]{1,14}[—–-]\s*/, '').trim() || l.ar;
+
 export default function Unit() {
   const [qs] = useSearchParams();
   const unitId = qs.get('id');
@@ -170,26 +173,35 @@ export default function Unit() {
         </>}
 
         <SecHead ico="/img/book.png" ar="دروس الوحدة" en="Unit Lessons" />
-        <div className="stations-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        <div className="stations-grid lessons-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
           {U.lessons.map(l => (
-            <div key={l.n} className={'station-card ' + l.status}>
-              <div className="img" style={{ height: 150 }}>
+            <div key={l.n} className={'station-card lsn ' + l.status}>
+              <div className="img">
                 <img loading="lazy" decoding="async" src={l.img} alt="" />
                 <span className={'st ' + l.status}>{ST[l.status]}</span>
                 {l.status === 'locked' && <div className="lock-overlay"><span>🔒</span></div>}
               </div>
-              <div className="body" style={{ padding: '16px 18px 18px' }}>
-                <h4 style={{ fontSize: 17 }}>الدرس {l.n} — {l.ar}</h4>
-                <div className="e">{l.en}</div>
-                <div className="meta">
-                  <span>{l.status === 'current' ? `أنجزت ${l.done} خطوات من ${l.of}` : l.status === 'locked' ? 'يُفتح بعد الدرس السابق' : 'مكتمل'}</span>
-                  <span>{l.pct}٪</span>
+              <div className="body">
+                <div className="lsn-head">
+                  <span className="no">{l.n}</span>
+                  <div style={{ minWidth: 0 }}>
+                    <h4>{lessonTitle(l)}</h4>
+                    {l.en && <div className="e">{l.en}</div>}
+                  </div>
                 </div>
-                <div className="bar thin"><i style={{ width: l.pct + '%', background: 'var(--gold)' }} /></div>
+                <div className="meta">
+                  <span>{l.status === 'current' ? `أنجزت ${l.done} من ${l.of} خطوة`
+                    : l.status === 'locked' ? '🔒 يُفتح بعد الدرس السابق'
+                    : `✓ أنجزت ${l.of} خطوات`}</span>
+                  <span className="pct">{l.pct}٪</span>
+                </div>
+                <div className="bar"><i style={{ width: Math.max(l.pct, l.pct ? 4 : 0) + '%' }} /></div>
                 <div className="cta">
                   {l.status === 'locked'
-                    ? <button className="off" disabled>مقفل</button>
-                    : <button className="continue" style={{ width: '100%' }} onClick={() => openLesson(l.id, l.status === 'done')}>{l.status === 'done' ? 'راجع' : 'تابع'}</button>}
+                    ? <button className="off" disabled>🔒 مقفل</button>
+                    : <button className={l.status === 'done' ? 'review' : 'continue'} onClick={() => openLesson(l.id, l.status === 'done')}>
+                        {l.status === 'done' ? '↺ راجع الدرس' : '▵ تابع الدرس'}
+                      </button>}
                 </div>
               </div>
             </div>

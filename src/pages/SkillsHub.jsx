@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { StatsBar, Ring, SecHead, FooterStrip, Empty } from '../components.jsx';
 import { Sparkline, SPARK_VARIANT } from '../Sparkline.jsx';
 import { SKILLS, skillFooters } from '../data.js';
@@ -37,9 +37,21 @@ const look = (s) => {
 
 export default function SkillsHub() {
   const nav = useNavigate();
+  const [params, setParams] = useSearchParams();
   const [skillId, setSkillId] = useState(null);   // null = الافتراضي من الباك اند
   const [tab, setTab] = useState('all');
   const { data: D, error } = useApi(() => api.skills({ skill_id: skillId, tab, days: 30 }), [skillId, tab]);
+
+  /* القادم من الرئيسية: /skills?skill=listening → نحدّد المهارة التي دخل منها (مرة واحدة) */
+  const wanted = params.get('skill');
+  const applied = useRef(false);
+  useEffect(() => {
+    if (applied.current || !wanted || !D?.skills?.length) return;
+    applied.current = true;
+    const m = D.skills.find(s => SKILL_KEY[s.name] === wanted || String(s.id) === wanted);
+    if (m && !m.is_selected) { setSkillId(m.id); setTab('all'); }
+    setParams({}, { replace: true });
+  }, [wanted, D]);
 
   if (error) return <div className="page"><StatsBar /><div className="container"><Empty t={error.message} e="Could not load skills" /></div></div>;
   const skills = D?.skills || [];
