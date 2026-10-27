@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { clickSound } from './sounds.js';
 import { Picture, SoundButton, useStopAudio, isMediaOnly } from './media.jsx';
 import QuestionGoals from './QuestionGoals.jsx';
+import QuestionPassage from './QuestionPassage.jsx';
 import { NEW_TYPES, OWN_IMAGE, OWN_TITLE, OWN_AUDIO, missingData, MissingData } from './QTypes.jsx';
 
 /* جسم السؤال المشترك (النشاط + الاختبار الختامي) — نفس كلاسات تصميم الكويز
@@ -41,6 +42,8 @@ export default function QuestionBody({ q, value, onChange, readOnly = false, sho
   const en = q.text_en && !(q.type === 'highlight' && !missingData(q));
   return (
     <div className="duo-q">
+      {/* النص القرائي: التعليمات ← النص ← أسئلته (كاملاً على أول سؤال، وزر «اقرأ النص» على بقية أسئلته) */}
+      <QuestionPassage q={q} timed={timed} />
       {NT && (q.type_label || q.auto_graded === false) && (
         <div className="qt-head">
           {q.type_label && <span className="chip qt-type">{q.type_label}</span>}

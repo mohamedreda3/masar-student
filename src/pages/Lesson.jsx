@@ -6,6 +6,7 @@ import { useApi, useHome, activityLink, ST, photoOnly, usePageTitle } from '../a
 import { playClip, dingSound, buzzSound, clickSound } from '../sounds.js';
 import { showToast } from '../toast.js';
 import QuestionGoals from '../QuestionGoals.jsx';
+import QuestionPassage from '../QuestionPassage.jsx';
 import ActivityLibrary from './ActivityLibrary.jsx';
 import { StoryCard } from './Library.jsx';
 
@@ -173,7 +174,9 @@ function Activity({ P }) {
               const ok = isRight(q.id);
               const graded = ok !== undefined;
               const cls = (v) => 'option' + (mine === v && graded ? (ok ? ' correct' : ' wrong') : mine === v ? ' selected' : '');
-              return (
+              return [
+                // النص القرائي مرة واحدة قبل أول أسئلته
+                q.passage && q.passage_position?.is_first && <QuestionPassage key={`passage-${q.passage.id}`} q={q} />,
                 <div key={q.id} className={'tf-row' + (graded ? (ok ? ' correct' : ' wrong') : '')}>
                   <span className="n">{i + 1}</span>
                   <span className="q"><span className="tr-hover" data-tr={q.text_en}>{q.text}</span></span>
@@ -183,8 +186,8 @@ function Activity({ P }) {
                     <button className={cls('false')} disabled={!!res || mine !== undefined} onClick={() => answerTf(q, 'false')}>خطأ ✗</button>
                   </span>
                   <QuestionGoals question={q} />
-                </div>
-              );
+                </div>,
+              ];
             })}
           </div>
           {res && (
