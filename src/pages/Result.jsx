@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { StatsBar, Ring, FooterStrip } from '../components.jsx';
-import { activityResult as R } from '../data.js';
 import { winSound } from '../sounds.js';
 import { showToast } from '../toast.js';
 
@@ -34,8 +33,8 @@ export function Confetti() {
 function adaptivePlan(pct) {
   if (pct < 60) return {
     verdict: 'محاولة طيبة!', verdictEn: 'Good try!',
-    to: '/extra/support', label: '🛟 ابدأ نشاط الدعم أولاً', labelEn: 'Support activity first', color: 'var(--teal)',
-    why: `لأن نتيجتك ${pct}٪ — رتّبنا لك نشاط دعم قصيراً يقوّيك قبل المتابعة، ثم أعد المحاولة.`,
+    to: '/support', label: '🛟 موارد الدعم ومعلمك', labelEn: 'Support resources', color: 'var(--teal)',
+    why: `لأن نتيجتك ${pct}٪ — راجع موارد الدعم أو اسأل معلمك، ثم أعد المحاولة.`,
   };
   if (pct < 90) return {
     verdict: 'أحسنت!', verdictEn: 'Well done!',
@@ -44,14 +43,15 @@ function adaptivePlan(pct) {
   };
   return {
     verdict: 'ممتاز!', verdictEn: 'Excellent!',
-    to: '/extra/challenge', label: '⚡ جرّب نشاط التحدي!', labelEn: 'Try the Challenge!', color: 'var(--purple)',
-    why: `نتيجتك ${pct}٪ رائعة — فتحنا لك نشاط التحدي لأنك جاهز لمستوى أصعب!`,
+    to: '/challenges', label: '⚡ جرّب التحديات!', labelEn: 'Try the Challenges!', color: 'var(--purple)',
+    why: `نتيجتك ${pct}٪ رائعة — جرّب تحديات الأسبوع لأنك جاهز لمستوى أصعب!`,
   };
 }
 
 export default function Result() {
   const { state } = useLocation();
-  const pct = state?.pct ?? R.pct;               // النتيجة الحية من الكويز، أو الافتراضية للعرض
+  // only the result of a real activity / story (sent in the navigation state) — no result: back to the path
+  const pct = state?.pct ?? 0;
   const plan = adaptivePlan(pct);
   // بعد نشاط حقيقي: الزر الرئيسي دائماً «النشاط التالي» (next_step من الباك اند) — وإعادة المحاولة زر مستقل بجانبه
   if (state?.next) Object.assign(plan, {
@@ -66,16 +66,19 @@ export default function Result() {
     ...(state.next ? { label: 'القصة التالية ←', labelEn: 'Next Story', color: 'var(--brand)', to: state.next, why: `نتيجتك ${pct}٪ — تابع إلى القصة التالية في مكتبتك.` }
       : { label: 'العودة لمكتبة القصص ←', labelEn: 'Story Library', color: 'var(--brand)', to: '/library', why: `نتيجتك ${pct}٪ — اختر قصتك التالية من المكتبة.` }),
   });
-  const live = !!state && 'reward' in state;   // جاي من نشاط حقيقي — نخفي البطاقات اللي مالهاش داتا من الـAPI
   const reward = state?.reward;                  // مكافأة الباك اند: points_earned, total_points, level_up…
-  const pts = reward ? reward.points_earned ?? 0 : R.pts;
+  const pts = reward ? reward.points_earned ?? 0 : 0;
+  // stars from the result itself (the mastery scale: 90+ / 75+ / 50+)
+  const stars = story ? story.rating?.stars ?? 0 : pct >= 90 ? 3 : pct >= 75 ? 2 : pct >= 50 ? 1 : 0;
   useEffect(() => {
+    if (!state) return;
     if (reward?.level_up) { winSound(); showToast(`مبروك! وصلت إلى المستوى ${reward.current_level ?? reward.level ?? ''}`, '🎉'); }
     else if (pct >= 60 && pts > 0) { winSound(); showToast(`+${pts} نقطة! أُضيفت لرصيدك`); }
     else if (pct >= 60) winSound();
     else showToast('أكملت النشاط — نشاط الدعم بانتظارك', '💪');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  if (!state) return <Navigate to="/path" replace />;
   return (
     <div className="page">
       <StatsBar />
@@ -102,7 +105,7 @@ export default function Result() {
                   <div style={{ fontSize: 9, fontWeight: 400 }}>{plan.verdictEn}</div>
                 </div>
               </Ring>
-              <div className="ring-stars reveal" style={{ '--rd': '0.7s' }}>{story ? '⭐'.repeat(story.rating?.stars ?? 0) + '☆'.repeat(Math.max(0, 3 - (story.rating?.stars ?? 0))) : '⭐⭐⭐'}</div>
+              <div className="ring-stars reveal" style={{ '--rd': '0.7s' }}>{'⭐'.repeat(stars) + '☆'.repeat(Math.max(0, 3 - stars))}</div>
             </div>
           </div>
 
@@ -115,13 +118,13 @@ export default function Result() {
             </div>
             <div className="result-stat">
               <img src="/img/stopwatch.png" alt="" />
-              <div className="n">{state?.time ?? R.time}</div>
+              <div className="n">{state?.time ?? '—'}</div>
               <div className="l">الوقت المستغرق</div>
               <div className="e">Time Spent</div>
             </div>
             <div className="result-stat">
               <img src="/img/clipboard.png" alt="" />
-              <div className="n" style={{ direction: 'rtl' }}>{state?.correct ?? R.correct}</div>
+              <div className="n" style={{ direction: 'rtl' }}>{state?.correct ?? '—'}</div>
               <div className="l">إجابات صحيحة</div>
               <div className="e">Correct Answers</div>
             </div>
@@ -157,46 +160,9 @@ export default function Result() {
           </div>
         )}
 
-        {!live && <div className="result-cols reveal" style={{ '--rd': '1.15s' }}>
-          <div className="card result-info">
-            <div className="badges-head">
-              <div>
-                <h3>✅ ما الذي أتقنته اليوم</h3>
-                <div className="en">What you did well</div>
-              </div>
-              <img className="side-ill" src="/img/clipboard.png" alt="" />
-            </div>
-            <div className="sw-box good" style={{ marginTop: 14 }}>
-              <ul>{R.mastered.map(m => <li key={m}>✔ {m}</li>)}</ul>
-            </div>
-          </div>
-          <div className="card result-info">
-            <div className="badges-head">
-              <div>
-                <h3>⬆ خطوتك التالية للتحسين</h3>
-                <div className="en">Your next improvement step</div>
-              </div>
-              <img className="side-ill" src="/img/target2.png" alt="" />
-            </div>
-            <div className="sw-box bad" style={{ marginTop: 14, background: 'var(--gold-soft)' }}>
-              <ul>{R.improve.map(m => <li key={m}>👣 {m}</li>)}</ul>
-            </div>
-          </div>
-        </div>}
-
         <div className="result-cols reveal" style={{ marginTop: 26, '--rd': '1.35s' }}>
-          {/* تعليق المعلم */}
-          {!live && <div className="card result-info" style={{ borderTop: '4px solid var(--pink)', display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-            <img src={R.teacher.img} alt="" style={{ width: 62, height: 62, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
-            <div style={{ flex: 1 }}>
-              <h3 style={{ fontSize: 16 }}>💬 تعليق المعلم</h3>
-              <div className="en">{R.teacher.name}</div>
-              <div style={{ fontSize: 13.5, color: 'var(--ink2)', lineHeight: 2, marginTop: 8 }}>{R.teacher.note}</div>
-            </div>
-            <span className="chip" style={{ background: 'var(--lav-soft)', color: 'var(--brand-ink)', flexShrink: 0 }}>معلمتك 💜</span>
-          </div>}
           {/* إنجاز جديد عند التفوق — وتشجيع البومة عند التعثر (لا شارات على نتيجة ضعيفة) */}
-          {live && pct >= 90 && !reward?.level_up ? null : (live ? reward?.level_up : pct >= 90) ? (
+          {reward?.level_up ? (
             <div className="card result-info unlock-card">
               <div className="badges-head">
                 <div>
@@ -207,14 +173,14 @@ export default function Result() {
               <div className="unlock-body">
                 <img src="/img/shield.png" alt="" className="pop-in" style={{ '--rd': '1.6s' }} />
                 <div>
-                  <div className="t">{live ? `المستوى ${reward.level ?? reward.current_level}` : 'متقن للفهم'}</div>
-                  <div className="e">{live ? 'Level Up!' : 'Master of Understanding'}</div>
-                  <div className="d">{live ? `مبروك! وصلت إلى المستوى ${reward.level ?? reward.current_level} — واصل جمع النقاط.` : 'أكملت نشاطاً بفهم ممتاز! شارة جديدة أُضيفت لمجموعتك.'}</div>
+                  <div className="t">{`المستوى ${reward.level ?? reward.current_level}`}</div>
+                  <div className="e">Level Up!</div>
+                  <div className="d">{`مبروك! وصلت إلى المستوى ${reward.level ?? reward.current_level} — واصل جمع النقاط.`}</div>
                   <Link to="/badges" className="link" style={{ fontSize: 12.5 }}>شاهد شاراتك ←</Link>
                 </div>
               </div>
             </div>
-          ) : (
+          ) : pct >= 90 ? null : (
             <div className="card result-info" style={{ borderTop: '4px solid var(--teal)' }}>
               <div className="badges-head">
                 <div>
@@ -226,8 +192,8 @@ export default function Result() {
                 <img src="/img/owl.png" alt="" />
                 <div className="b">
                   {pct < 60
-                    ? (live ? 'التعثر جزء من التعلم! أعد المحاولة وسترى الفرق بنفسك — أو تابع وارجع لها لاحقاً.' : 'التعثر جزء من التعلم! نشاط الدعم سيقوّيك — وعند إعادة المحاولة سترى الفرق بنفسك.')
-                    : 'اقتربت من الممتاز! راجع «خطوتك التالية» وأعد المحاولة لتفتح شارة الإتقان.'}
+                    ? 'التعثر جزء من التعلم! أعد المحاولة وسترى الفرق بنفسك — أو تابع وارجع لها لاحقاً.'
+                    : 'اقتربت من الممتاز! أعد المحاولة لترفع نتيجتك.'}
                 </div>
               </div>
             </div>
@@ -242,11 +208,11 @@ export default function Result() {
 
         {/* شريط الإجراءات الختامي */}
         <div className="result-actions reveal" style={{ '--rd': '1.5s' }}>
-          <Link to={state?.retry || '/quiz/run'} className="btn btn-ghost btn-col">
+          <Link to={state?.retry || '/path'} className="btn btn-ghost btn-col">
             <span>{story ? '📖 إعادة القراءة' : '🔁 إعادة المحاولة'}</span>
             <span className="sub">Retry</span>
           </Link>
-          <Link to={live ? "/challenges" : "/game"} className="btn btn-ghost btn-col">
+          <Link to="/challenges" className="btn btn-ghost btn-col">
             <span>🎮 تدريب سريع</span>
             <span className="sub">Quick Practice</span>
           </Link>

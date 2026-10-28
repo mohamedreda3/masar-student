@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { StatsBar, Ring, SecHead, FooterStrip, Empty } from '../components.jsx';
 import { SKILLS } from '../data.js';
 import api from '../api/client.js';
@@ -350,18 +350,93 @@ function GoalRows({ goals, thin }) {
 let SKILL_NAME_BY_ID = {}; // يُملأ من accuracy.skills لربط الهدف بأيقونة المهارة
 
 /* ===== التبويبات ===== */
+/* سلم الإتقان — نفس المستويات في كل التقارير (من الخادم: mastery_scale) */
+const LEVEL_COLOR = { advanced: 'var(--green)', secure: 'var(--brand)', developing: 'var(--gold)', needs_support: 'var(--danger)' };
+function LevelTag({ level }) {
+  if (!level?.label) return null;
+  return <span className="st-chip" style={{ color: LEVEL_COLOR[level.key] || 'var(--mute)', background: 'var(--line2)', padding: '2px 10px' }}>{level.label}</span>;
+}
+function ScaleLegend({ scale }) {
+  if (!scale?.levels?.length) return null;
+  return (
+    <div className="card" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px', alignItems: 'center', fontSize: 12, fontWeight: 700, padding: '10px 14px' }}>
+      <span>{scale.title}:</span>
+      {scale.levels.map(l => <span key={l.key} style={{ color: LEVEL_COLOR[l.key] }}>● {l.label} <small style={{ color: 'var(--mute)' }}>({l.range})</small></span>)}
+    </div>
+  );
+}
+
+/* نواتج التعلم: حققتها · أعمل عليها · أحتاج مساعدة (+ خطة الدعم من معلمي) */
+function OutcomesBox({ lo, fallback }) {
+  const [tab, setTab] = useState('working');
+  if (!lo?.summary) {
+    // older server: the plain list
+    return (
+      <div className="card">
+        {!fallback?.length && <Empty t="لا توجد نواتج تعلم بعد" e="No outcomes yet" />}
+        {(fallback || []).map(o => (
+          <div key={o.id} className={'outcome-row ' + (o.is_achieved ? 'done' : 'todo')}>
+            <span className="chk">{o.is_achieved ? '✓' : '•'}</span>
+            <div style={{ flex: 1 }}><div className="t">{o.title}</div>{o.mastery_percentage != null && <div className="en">إتقان {o.mastery_percentage}٪</div>}</div>
+            <span className={'st-chip ' + (o.is_achieved ? 'مكتملة' : 'قادمة')}>{o.status_label}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  const working = (lo.not_achieved || []).filter(o => !o.needs_support);
+  const tabs = [
+    { key: 'achieved', ar: 'حقّقتها', n: lo.summary.achieved, list: lo.achieved || [], color: 'var(--green)' },
+    { key: 'working', ar: 'أعمل عليها', n: working.length, list: working, color: 'var(--gold)' },
+    { key: 'help', ar: 'أحتاج مساعدة', n: lo.summary.needs_support, list: lo.needs_support || [], color: 'var(--danger)' },
+  ];
+  const cur = tabs.find(t => t.key === tab) || tabs[1];
+  return (
+    <div className="card">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
+        {tabs.map(t => (
+          <button key={t.key} type="button" onClick={() => { clickSound(); setTab(t.key); }}
+            style={{ border: '2px solid ' + (tab === t.key ? t.color : 'var(--line)'), borderRadius: 14, padding: '8px 4px', background: 'var(--surface)', cursor: 'pointer', fontWeight: 800 }}>
+            <div style={{ fontSize: 22, color: t.color }}>{t.n}</div>
+            <div style={{ fontSize: 12 }}>{t.ar}</div>
+          </button>
+        ))}
+      </div>
+      {!cur.list.length && <Empty t={cur.key === 'help' ? 'لا شيء هنا — أحسنت!' : 'لا توجد نواتج هنا الآن'} e="Nothing here" />}
+      {cur.list.map(o => (
+        <div key={o.id} className={'outcome-row ' + (o.is_achieved ? 'done' : 'todo')}>
+          <span className="chk">{o.is_achieved ? '✓' : o.needs_support ? '!' : '•'}</span>
+          <div style={{ flex: 1 }}>
+            <div className="t">{o.title}</div>
+            <div className="en">{o.mastery_percentage != null ? `إتقان ${o.mastery_percentage}٪` : 'لم يُقيَّم بعد'}{o.coverage_percentage != null ? ` · أنجزت ${o.coverage_percentage}٪ من أنشطته` : ''}</div>
+            {o.note?.text && <div className="en" style={{ color: 'var(--gold)' }}>{o.note.text}</div>}
+            {(o.interventions || []).filter(p => p.status === 'active').map(p => (
+              <div key={p.id} className="en" style={{ color: 'var(--brand)', fontWeight: 700 }}>🤝 خطة دعم من {p.teacher?.name ? `أ. ${p.teacher.name}` : 'معلمك'}: {p.type_label} · {p.steps_done}/{p.steps_total}</div>
+            ))}
+          </div>
+          <LevelTag level={o.level} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function OverviewTab({ c, onPeriod }) {
   const K = c.cards || {};
+  const mastery = K.mastery || K.overall_progress || {};
   const kpis = [
+    // ما مستوى إتقاني؟ (الدرجات الفعلية ÷ العظمى)
+    { ar: 'مستوى الإتقان', en: 'Mastery Level', n: pctTxt(mastery.value), sub: mastery.level?.label || '', delta: mastery.change_points != null ? changeTxt(mastery.change_points, ' نقطة') : null, ico: '/img/target.png' },
+    // ماذا أنجزت؟ (الأنشطة المكتملة ÷ المكلف بها)
+    { ar: 'تقدم المسار', en: 'Path Progress', n: K.completion ? pctTxt(K.completion.value) : K.completed_tasks?.value ?? 0, sub: K.completion ? `${K.completion.done} من ${K.completion.total} نشاط` : K.completed_tasks?.total != null ? `من أصل ${K.completed_tasks.total}` : '', delta: changeTxt(K.completed_tasks?.change_percentage), ico: '/img/clipboard.png' },
+    { ar: 'الاختبارات', en: 'Tests', n: pctTxt(K.exams?.value), sub: K.exams?.level?.label || (K.exams ? 'لا توجد اختبارات مصححة بعد' : ''), delta: null, ico: '/img/medal.png' },
     { ar: 'ساعات التعلم', en: 'This Month', n: K.learning_hours?.value ?? 0, sub: K.learning_hours?.unit, delta: changeTxt(K.learning_hours?.change_percentage), ico: '/img/clipboard.png' },
-    { ar: 'المهام المكتملة', en: 'Completed Tasks', n: K.completed_tasks?.value ?? 0, sub: K.completed_tasks?.total != null ? `من أصل ${K.completed_tasks.total}` : '', delta: changeTxt(K.completed_tasks?.change_percentage), ico: '/img/clipboard.png' },
-    { ar: 'نسبة التقدم', en: 'Overall Progress', n: pctTxt(K.overall_progress?.value), sub: '', delta: K.overall_progress?.change_points != null ? changeTxt(K.overall_progress.change_points, ' نقطة') : null, ico: '/img/target.png' },
     { ar: 'النقاط المكتسبة', en: 'Points Earned', n: K.points?.value ?? 0, sub: K.points?.unit, delta: changeTxt(K.points?.change_percentage), ico: '/img/points.png' },
   ];
   return (
     <>
       <SecHead ico="/img/target.png" ar="نظرة عامة على تقدمي" en="Overview" />
-      <div className="kpi-grid">
+      <div className="kpi-grid kpi-5">
         {kpis.map(k => (
           <div className="kpi" key={k.ar}>
             <div className="head">
@@ -374,20 +449,10 @@ function OverviewTab({ c, onPeriod }) {
         ))}
       </div>
 
+      <ScaleLegend scale={c.mastery_scale} />
+
       <SecHead ico="/img/bulb.png" ar="نواتج التعلم" en="Learning Outcomes" />
-      <div className="card">
-        {!c.outcomes?.length && <Empty t="لا توجد نواتج تعلم بعد" e="No outcomes yet" />}
-        {(c.outcomes || []).map(o => (
-          <div key={o.id} className={'outcome-row ' + (o.status === 'achieved' ? 'done' : 'todo')}>
-            <span className="chk">{o.status === 'achieved' ? '✓' : '•'}</span>
-            <div style={{ flex: 1 }}>
-              <div className="t">{o.title}</div>
-              {o.mastery_percentage != null && <div className="en">إتقان {o.mastery_percentage}٪</div>}
-            </div>
-            <span className={'st-chip ' + (o.status === 'achieved' ? 'مكتملة' : 'قادمة')}>{o.status_label}</span>
-          </div>
-        ))}
-      </div>
+      <OutcomesBox lo={c.learning_outcomes} fallback={c.outcomes} />
 
       <SecHead ico="/img/book.png" ar="تقدّم المهارات" en="Skills Progress" />
       <SkillRings skills={c.skills || []} />
@@ -543,7 +608,9 @@ const workRoute = (u) => {
 };
 
 export default function Reports() {
-  const [tab, setTab] = useState('overview');
+  // ?tab=portfolio (e.g. «ملف أعمالي» in More) opens that tab
+  const [qs] = useSearchParams();
+  const [tab, setTab] = useState(() => (['overview', 'skills', 'achievements', 'portfolio'].includes(qs.get('tab')) ? qs.get('tab') : 'overview'));
   const [period, setPeriod] = useState('1M');
   const [skillId, setSkillId] = useState(null);
   const [accSkill, setAccSkill] = useState(null);

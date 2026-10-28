@@ -12,33 +12,19 @@ import Lesson from './pages/Lesson.jsx';
 import QuizInstructions from './pages/QuizInstructions.jsx';
 import Support from './pages/Support.jsx';
 import Notifications from './pages/Notifications.jsx';
-import Portfolio from './pages/Portfolio.jsx';
 import Calendar from './pages/Calendar.jsx';
 import Feedback from './pages/Feedback.jsx';
 import Settings from './pages/Settings.jsx';
 import QuizRun from './pages/QuizRun.jsx';
 import Result from './pages/Result.jsx';
-import Game from './pages/Game.jsx';
-import LevelIntro from './pages/LevelIntro.jsx';
-import LevelQuestion from './pages/LevelQuestion.jsx';
-import LevelResult from './pages/LevelResult.jsx';
 import Library from './pages/Library.jsx';
 import Story from './pages/Story.jsx';
-import Activity from './pages/Activity.jsx';
 import SkillsHub from './pages/SkillsHub.jsx';
 import Exam from './pages/Exam.jsx';
-import ExamResult from './pages/ExamResult.jsx';
-import ExitTicket from './pages/ExitTicket.jsx';
-import Extra from './pages/Extra.jsx';
-import Rubric from './pages/Rubric.jsx';
-import Certificate from './pages/Certificate.jsx';
 import NotFound from './pages/NotFound.jsx';
 import Badges from './pages/Badges.jsx';
 import Challenges from './pages/Challenges.jsx';
 import More from './pages/More.jsx';
-import Engines from './pages/Engines.jsx';
-import TestBuilder from './pages/TestBuilder.jsx';
-import WordSearch from './pages/WordSearch.jsx';
 import Login from './pages/Login.jsx';
 import Assignment from './pages/Assignment.jsx';
 import PlayGame from './pages/PlayGame.jsx';
@@ -73,8 +59,8 @@ function Shell() {
   }, [pathname]);
   if (!getToken() && pathname !== '/login') return <Navigate to="/login" replace />; // بلا توكن → شاشة الدخول
   if (pathname === '/login') return getToken() ? <Navigate to="/" replace /> : <Login />;
-  const focused = ['/lesson', '/quiz/run', '/play', '/level-check/question', '/story', '/exam', '/exit-ticket'].includes(pathname)
-    || pathname.startsWith('/activity/') || pathname.startsWith('/extra/') || pathname.startsWith('/game'); // شاشات الجلسة المركزة بلا قائمة علوية
+  const focused = ['/lesson', '/quiz/run', '/play', '/story', '/exam'].includes(pathname)
+   ; // شاشات الجلسة المركزة بلا قائمة علوية
   return (
     <HomeProvider>
       {!focused && <TopBar />}
@@ -96,31 +82,29 @@ function Shell() {
         <Route path="/badges" element={<Badges />} />
         <Route path="/challenges" element={<Challenges />} />
         <Route path="/more" element={<More />} />
-        <Route path="/engines" element={<Engines />} />
-        <Route path="/test-builder" element={<TestBuilder />} />
+        <Route path="/engines" element={<Navigate to="/challenges" replace />} />
+        <Route path="/test-builder" element={<Navigate to="/challenges" replace />} />
         <Route path="/support" element={<Support />} />
         <Route path="/notifications" element={<Notifications />} />
-        <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/portfolio" element={<Navigate to="/reports?tab=portfolio" replace />} />
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/feedback" element={<Feedback />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/quiz/run" element={<QuizRun />} />
         <Route path="/result" element={<Result />} />
-        <Route path="/game" element={<Game />} />
-        <Route path="/game/wordsearch" element={<WordSearch />} />
-        <Route path="/level-check" element={<LevelIntro />} />
-        <Route path="/level-check/question" element={<LevelQuestion />} />
-        <Route path="/level-check/result" element={<LevelResult />} />
+        <Route path="/game" element={<Navigate to="/challenges" replace />} />
+        <Route path="/game/wordsearch" element={<Navigate to="/challenges" replace />} />
+        <Route path="/level-check/*" element={<Navigate to="/" replace />} />
         <Route path="/library" element={<Library />} />
         <Route path="/story" element={<Story />} />
-        <Route path="/activity/:type" element={<Activity />} />
+        <Route path="/activity/:type" element={<Navigate to="/skills" replace />} />
         <Route path="/skills" element={<SkillsHub />} />
         <Route path="/exam" element={<Exam />} />
-        <Route path="/exam/result" element={<ExamResult />} />
-        <Route path="/exit-ticket" element={<ExitTicket />} />
-        <Route path="/extra/:mode" element={<Extra />} />
-        <Route path="/rubric" element={<Rubric />} />
-        <Route path="/certificate" element={<Certificate />} />
+        <Route path="/exam/result" element={<Navigate to="/path" replace />} />
+        <Route path="/exit-ticket" element={<Navigate to="/path" replace />} />
+        <Route path="/extra/:mode" element={<Navigate to="/support" replace />} />
+        <Route path="/rubric" element={<Navigate to="/path" replace />} />
+        <Route path="/certificate" element={<Navigate to="/badges" replace />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       </div>

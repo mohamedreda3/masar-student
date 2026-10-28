@@ -45,7 +45,7 @@ function DailyVocab() {
   const lessonVocab = (useHome().home?.vocabulary || []).map(v => ({ ar: v.word, en: v.word_en, img: photoOnly(v.image), audio: v.audio }));
   return (
     <>
-      <SecHead ico="/img/flashcards.png" ar="مفردات اليوم" en="Today's Words" link="عرض الكل" to="/activity/vocab" />
+      <SecHead ico="/img/flashcards.png" ar="مفردات اليوم" en="Today's Words" link="عرض الكل" to="/activities" />
       {!lessonVocab.length && <Empty t="لا مفردات اليوم" e="No words today" />}
       <div className="dv-grid">
         {lessonVocab.map((v, i) => (
@@ -268,7 +268,7 @@ function MySkills() {
   return (
     <>
       <SecHead ico="/img/target2.png" ar="مهاراتي الأربع" en="My Four Skills" link="مركز المهارات" to="/skills" />
-      <Link to={'/activity/' + weakest.skill} className="adaptive-strip" style={{ borderColor: W.color, marginBottom: 14 }}>
+      <Link to={'/skills?skill=' + weakest.skill} className="adaptive-strip" style={{ borderColor: W.color, marginBottom: 14 }}>
         <span className="tagA" style={{ background: W.color }}>🧭 مقترح لك اليوم</span>
         <div className="why">
           نشاط {W.ar} — لأنها مهارتك الأقل هذا الأسبوع ({weakest.pct}٪)، تدريب قصير يرفعها. <b style={{ color: W.color }}>ابدأ ←</b>

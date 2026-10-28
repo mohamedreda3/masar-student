@@ -56,7 +56,7 @@ function Hero({ P }) {
             <img src="/img/book.png" alt="" />
             <div><div className="t">مكتبة القصص</div><div className="e">Story Library</div></div>
           </Link>
-          <Link to="/extra/support" className="toolkit-item">
+          <Link to="/support" className="toolkit-item">
             <img src="/img/lamp.png" alt="" />
             <div><div className="t">أحتاج مساعدة</div><div className="e">Support</div></div>
           </Link>
@@ -137,7 +137,7 @@ function MyGroup() {
               <img src="/img/book.png" alt="" />
               <div><div className="t">مكتبة القصص</div><div className="e">Story Library</div></div>
             </Link>
-            <Link to="/extra/support" className="toolkit-item">
+            <Link to="/support" className="toolkit-item">
               <img src="/img/lamp.png" alt="" />
               <div><div className="t">أحتاج مساعدة</div><div className="e">Support</div></div>
             </Link>

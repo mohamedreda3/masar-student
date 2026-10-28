@@ -68,8 +68,7 @@ export const activityLink = (lessonId, activityId) => `/quiz/run?lesson=${lesson
 /* ===== صور الوحدات والدروس =====
    صور الـAPI المولّدة (SVG مكتوب عليه العنوان) تتقصّ في البطاقات وتكرر العنوان —
    نعرض الصورة الحقيقية إن وُجدت، وإلا رسمة الوحدة من التصميم (بالاسم) أو مشهداً ثابتاً لها */
-import { stations as _st, futureStations as _fst } from '../data.js';
-const UNIT_ART = Object.fromEntries([..._st, ..._fst].map(s => [s.ar, s.img]));
+import { UNIT_ART } from '../data.js';
 const SCENES = ['/img/scene-greetings.png', '/img/scene-read.png', '/img/scene-story.png', '/img/scene-discover.png', '/img/scene-garden.png', '/img/scene-market.png', '/img/scene-play.png', '/img/scene-speak.png', '/img/scene-express.png', '/img/scene-farm.png'];
 const isReal = (src) => !!src && typeof src === 'string' && !!src.trim();   // أي صورة راجعة تُعرض كما هي (البديل فقط عند غيابها؛ والخطأ يعالجه main.jsx)
 const pick = (seed) => { const s = String(seed ?? ''); let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return SCENES[h % SCENES.length]; };
