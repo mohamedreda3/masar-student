@@ -52,7 +52,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
-  font-family: 'Tajawal', 'Cairo', 'Readex Pro', 'Noto Sans Arabic', 'Segoe UI', sans-serif;
+  font-family: 'Noto Naskh Arabic', 'Tajawal', 'Cairo', 'Readex Pro', 'Segoe UI', sans-serif;
   background: var(--surface);
   color: var(--ink);
 }
@@ -2773,7 +2773,7 @@ html[dir="rtl"] .duo-bubble::before,[dir="rtl"] .duo-bubble::before{transform:ro
 .tr-book{position:relative;border-radius:22px;overflow:hidden;border:1px solid #e7e5e4;box-shadow:0 12px 30px rgba(15,23,42,.1)}
 .tr-sheet{position:relative;background:#fffdf7 center/contain no-repeat}
 .tr-guide{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.tr-guide text{font-family:"Tajawal","Cairo","Noto Naskh Arabic",sans-serif;font-weight:900;font-size:160px;fill:#f1f5f9;stroke:#94a3b8;stroke-width:2.5;stroke-dasharray:6 7}
+.tr-guide text{font-family:"Noto Naskh Arabic","Tajawal","Cairo",sans-serif;font-weight:900;font-size:160px;fill:#f1f5f9;stroke:#94a3b8;stroke-width:2.5;stroke-dasharray:6 7}
 .tr-sheet canvas{position:relative;display:block;width:100%;height:clamp(240px,46vh,380px);touch-action:none;cursor:crosshair}
 .tr-spk{position:absolute;z-index:3;top:10px;inset-inline-end:10px}
 /* ===== الاستجابة بالاختيار ===== */
@@ -2979,7 +2979,7 @@ html[dir="rtl"] .duo-bubble::before,[dir="rtl"] .duo-bubble::before{transform:ro
 .lt-board{position:relative;margin-top:14px;border-radius:22px;border:10px solid #92400e;overflow:hidden}
 .lt-sheet{position:relative;background:#14532d center/contain no-repeat}
 .lt-guide{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.lt-guide text{font-family:"Tajawal","Cairo","Noto Naskh Arabic",sans-serif;font-weight:900;font-size:170px;fill:rgba(255,255,255,.08);stroke:rgba(255,255,255,.75);stroke-width:2.5;stroke-dasharray:6 8}
+.lt-guide text{font-family:"Noto Naskh Arabic","Tajawal","Cairo",sans-serif;font-weight:900;font-size:170px;fill:rgba(255,255,255,.08);stroke:rgba(255,255,255,.75);stroke-width:2.5;stroke-dasharray:6 8}
 .lt-sheet canvas{position:relative;display:block;width:100%;height:clamp(260px,48vh,400px);touch-action:none;cursor:crosshair}
 .lt-score{position:absolute;inset:auto 0 14px;margin:auto;width:fit-content;padding:8px 18px;border-radius:99px;font-weight:900;color:#fff;animation:msPop .4s}
 .lt-score.ok{background:#16a34a}.lt-score.bad{background:#dc2626}
