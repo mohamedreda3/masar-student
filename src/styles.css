@@ -1,4 +1,15 @@
 
+/* Almarai — self-hosted (SIL Open Font License 1.1).
+   Served by the app itself: fonts.gstatic.com is blocked on some networks. */
+@font-face{font-family:'Almarai';font-style:normal;font-weight:300;font-display:swap;src:url('/fonts/almarai-300-arabic.woff2') format('woff2');unicode-range:U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;}
+@font-face{font-family:'Almarai';font-style:normal;font-weight:300;font-display:swap;src:url('/fonts/almarai-300-latin1.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+@font-face{font-family:'Almarai';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/almarai-400-arabic.woff2') format('woff2');unicode-range:U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;}
+@font-face{font-family:'Almarai';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/almarai-400-latin3.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+@font-face{font-family:'Almarai';font-style:normal;font-weight:700;font-display:swap;src:url('/fonts/almarai-700-arabic.woff2') format('woff2');unicode-range:U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;}
+@font-face{font-family:'Almarai';font-style:normal;font-weight:700;font-display:swap;src:url('/fonts/almarai-700-latin5.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+@font-face{font-family:'Almarai';font-style:normal;font-weight:800;font-display:swap;src:url('/fonts/almarai-800-arabic.woff2') format('woff2');unicode-range:U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;}
+@font-face{font-family:'Almarai';font-style:normal;font-weight:800;font-display:swap;src:url('/fonts/almarai-800-latin7.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
+
 /* Lemonada — self-hosted (SIL Open Font License 1.1).
    Served by the app itself: fonts.gstatic.com is blocked on some networks. */
 @font-face{font-family:'Lemonada';font-style:normal;font-weight:300 700;font-display:swap;src:url('/fonts/lemonada-arabic.woff2') format('woff2');unicode-range:U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC7, U+10EC9-10EEE, U+10EF0-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;}
@@ -69,7 +80,7 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
-  font-family: 'Lemonada', 'Noto Naskh Arabic', 'Tajawal', 'Cairo', 'Readex Pro', 'Segoe UI', sans-serif;
+  font-family: 'Almarai', 'Lemonada', 'Noto Naskh Arabic', 'Tajawal', 'Cairo', 'Readex Pro', 'Segoe UI', sans-serif;
   background: var(--surface);
   color: var(--ink);
 }
@@ -2013,46 +2024,46 @@ button.home-skill { font: inherit; color: inherit; text-align: start; cursor: po
 .letter-chip.active { background: var(--brand); border-color: var(--brand); color: #fff; box-shadow: 0 6px 14px color-mix(in srgb, var(--brand) 35%, transparent); }
 
 /* ===== شاشة تسجيل الدخول — مطابقة لدخول لوحة المدرسة ===== */
-.login-page { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 40px; padding: 40px clamp(16px, 6vw, 110px); background: #fff; color: #1f2937; }
+.login-page { min-height: 100dvh; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 40px; padding: 28px clamp(16px, 4vw, 72px); background: #fff; color: #1f2937; }
 .login-form { width: 100%; max-width: 700px; justify-self: center; display: flex; flex-direction: column; align-items: center; }
-.login-title { font-family: 'Aref Ruqaa', serif; font-weight: 700; font-size: clamp(52px, 6vw, 84px); line-height: 1.3; margin: 0; color: #111827; }
-.login-rule { width: 50px; height: 3px; border-radius: 3px; background: #d1d5db; margin: 26px 0 62px; }
-.login-sub { font-size: 19px; color: #374151; margin: 0 0 26px; }
-.login-input { width: 100%; height: 88px; border: 2px solid transparent; border-radius: 999px; background: #e8f0fe; padding: 0 44px; font-family: inherit; font-size: 20px; color: #111827; text-align: right; transition: border-color .2s; }
+.login-title { font-family: 'Aref Ruqaa', serif; font-weight: 700; font-size: clamp(34px, 3.6vw, 54px); line-height: 1.25; margin: 0; color: #111827; }
+.login-rule { width: 44px; height: 3px; border-radius: 3px; background: #d1d5db; margin: 16px 0 30px; }
+.login-sub { font-size: 16px; color: #374151; margin: 0 0 18px; }
+.login-input { width: 100%; height: 58px; border: 2px solid transparent; border-radius: 999px; background: #e8f0fe; padding: 0 26px; font-family: inherit; font-size: 16px; color: #111827; text-align: right; transition: border-color .2s; }
 .login-input::placeholder { color: #6b7280; text-align: right; }
 .login-input:focus { outline: none; border-color: #22b161; }
-.login-form > .login-input, .login-pass { margin-bottom: 24px; }
+.login-form > .login-input, .login-pass { margin-bottom: 16px; }
 .login-pass { position: relative; width: 100%; }
-.login-pass .login-input { padding-left: 84px; }
-.login-eye { position: absolute; left: 30px; top: 50%; transform: translateY(-50%); color: #4b5563; display: grid; place-items: center; }
-.login-row { width: 100%; display: flex; justify-content: space-between; align-items: center; margin: 18px 0 50px; font-size: 19px; }
+.login-pass .login-input { padding-left: 58px; }
+.login-eye { position: absolute; left: 22px; top: 50%; transform: translateY(-50%); color: #4b5563; display: grid; place-items: center; }
+.login-row { width: 100%; display: flex; justify-content: space-between; align-items: center; margin: 10px 0 26px; font-size: 15px; }
 .login-check { display: flex; align-items: center; gap: 12px; cursor: pointer; color: #374151; }
 .login-check input { position: absolute; opacity: 0; pointer-events: none; }
-.login-check .box { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #1d6fe0; display: grid; place-items: center; color: transparent; font-size: 16px; font-weight: 900; transition: .2s; }
+.login-check .box { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #1d6fe0; display: grid; place-items: center; color: transparent; font-size: 16px; font-weight: 900; transition: .2s; }
 .login-check input:checked + .box { background: #1d6fe0; color: #fff; }
 .login-check input:focus-visible + .box { outline: 3px solid #93c5fd; }
 .login-forgot { color: #22b161; text-decoration: none; }
 .login-forgot:hover { text-decoration: underline; }
 .login-err { width: 100%; margin: -26px 0 24px; padding: 12px 20px; border-radius: 16px; background: #fef2f2; color: #b91c1c; font-size: 15px; text-align: center; }
-.login-btn { width: 100%; height: 86px; border-radius: 999px; background: #22b161; color: #fff; font-family: inherit; font-size: 24px; font-weight: 800; box-shadow: 0 6px 16px rgba(34,177,97,.28); transition: filter .2s, transform .1s; }
+.login-btn { width: 100%; height: 58px; border-radius: 999px; background: #22b161; color: #fff; font-family: inherit; font-size: 18px; font-weight: 800; box-shadow: 0 6px 16px rgba(34,177,97,.28); transition: filter .2s, transform .1s; }
 .login-btn:hover { filter: brightness(1.06); }
 .login-btn:active { transform: translateY(1px); }
 .login-btn:disabled { opacity: .65; cursor: wait; }
 .login-brand { text-align: center; justify-self: center; }
-.login-brand img { width: min(600px, 100%); display: block; margin: 0 auto 60px; }
-.login-brand p { font-size: clamp(20px, 2vw, 28px); color: #1f2937; margin: 0 0 42px; }
+.login-brand img { width: min(400px, 100%); display: block; margin: 0 auto 28px; }
+.login-brand p { font-size: clamp(14px, 1.3vw, 18px); color: #1f2937; margin: 0 0 20px; }
 @media (max-width: 900px) {
   .login-page { grid-template-columns: 1fr; gap: 10px; padding: 28px 16px; }
   .login-brand { order: -1; }
   .login-brand img { width: min(320px, 80%); margin-bottom: 0; }
   .login-brand p { display: none; }
   .login-rule { margin: 18px 0 30px; }
-  .login-input, .login-btn { height: 64px; font-size: 17px; }
+  .login-input, .login-btn { height: 54px; font-size: 16px; }
   .login-input { padding: 0 26px; }
   .login-row { font-size: 16px; margin: 6px 0 30px; }
 }
 .login-tabs { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
-.login-tab { height: 64px; border-radius: 999px; background: #e8f0fe; color: #374151; font-family: inherit; font-size: 18px; font-weight: 700; border: 2px solid transparent; transition: .2s; }
+.login-tab { height: 50px; border-radius: 999px; background: #e8f0fe; color: #374151; font-family: inherit; font-size: 16px; font-weight: 700; border: 2px solid transparent; transition: .2s; }
 .login-tab.on { border-color: #22b161; background: #e9f8ef; color: #15803d; }
 
 /* صورة لم ترجع من الـAPI → شعار مسار */
@@ -2793,7 +2804,7 @@ html[dir="rtl"] .duo-bubble::before,[dir="rtl"] .duo-bubble::before{transform:ro
 .tr-book{position:relative;border-radius:22px;overflow:hidden;border:1px solid #e7e5e4;box-shadow:0 12px 30px rgba(15,23,42,.1)}
 .tr-sheet{position:relative;background:#fffdf7 center/contain no-repeat}
 .tr-guide{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.tr-guide text{font-family:"Lemonada", "Noto Naskh Arabic","Tajawal","Cairo",sans-serif;font-weight:900;font-size:160px;fill:#f1f5f9;stroke:#94a3b8;stroke-width:2.5;stroke-dasharray:6 7}
+.tr-guide text{font-family:"Almarai","Lemonada", "Noto Naskh Arabic","Tajawal","Cairo",sans-serif;font-weight:900;font-size:160px;fill:#f1f5f9;stroke:#94a3b8;stroke-width:2.5;stroke-dasharray:6 7}
 .tr-sheet canvas{position:relative;display:block;width:100%;height:clamp(240px,46vh,380px);touch-action:none;cursor:crosshair}
 .tr-spk{position:absolute;z-index:3;top:10px;inset-inline-end:10px}
 /* ===== الاستجابة بالاختيار ===== */
@@ -2999,7 +3010,7 @@ html[dir="rtl"] .duo-bubble::before,[dir="rtl"] .duo-bubble::before{transform:ro
 .lt-board{position:relative;margin-top:14px;border-radius:22px;border:10px solid #92400e;overflow:hidden}
 .lt-sheet{position:relative;background:#14532d center/contain no-repeat}
 .lt-guide{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.lt-guide text{font-family:"Lemonada", "Noto Naskh Arabic","Tajawal","Cairo",sans-serif;font-weight:900;font-size:170px;fill:rgba(255,255,255,.08);stroke:rgba(255,255,255,.75);stroke-width:2.5;stroke-dasharray:6 8}
+.lt-guide text{font-family:"Almarai","Lemonada", "Noto Naskh Arabic","Tajawal","Cairo",sans-serif;font-weight:900;font-size:170px;fill:rgba(255,255,255,.08);stroke:rgba(255,255,255,.75);stroke-width:2.5;stroke-dasharray:6 8}
 .lt-sheet canvas{position:relative;display:block;width:100%;height:clamp(260px,48vh,400px);touch-action:none;cursor:crosshair}
 .lt-score{position:absolute;inset:auto 0 14px;margin:auto;width:fit-content;padding:8px 18px;border-radius:99px;font-weight:900;color:#fff;animation:msPop .4s}
 .lt-score.ok{background:#16a34a}.lt-score.bad{background:#dc2626}
