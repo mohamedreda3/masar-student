@@ -7,6 +7,7 @@ import Home from './pages/Home.jsx';
 import Path from './pages/Path.jsx';
 import Activities from './pages/Activities.jsx';
 import Reports from './pages/Reports.jsx';
+import RubricEvaluations from './pages/RubricEvaluation.jsx';
 import Unit from './pages/Unit.jsx';
 import Lesson from './pages/Lesson.jsx';
 import QuizInstructions from './pages/QuizInstructions.jsx';
@@ -76,6 +77,7 @@ function Shell() {
         <Route path="/assignments" element={<Activities key="assignments" mode="assignments" />} />
         <Route path="/games" element={<Navigate to="/challenges" replace />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/rubric-evaluations" element={<RubricEvaluations />} />
         <Route path="/unit" element={<Unit />} />
         <Route path="/lesson" element={<Lesson />} />
         <Route path="/quiz" element={<QuizInstructions />} />

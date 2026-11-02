@@ -184,6 +184,10 @@ export const api = {
   lesson:   (lessonId) => http(`/path/lessons/${lessonId}`),
   // صفحة الدرس (المحتوى الدراسي)
   lessonPage:       (lessonId) => http(`/path/lessons/${lessonId}/page`),
+
+  /* تقييمات المعايير (rubric) — المعتمدة من المعلم فقط */
+  rubricEvaluations: (params = {}) => http('/rubric-evaluations' + qstr(params)),
+  rubricEvaluation:  (id) => http(`/rubric-evaluations/${id}`),
   submitLessonTask: (lessonId, answers) => http(`/path/lessons/${lessonId}/page/task`, { method: 'POST', body: { answers } }),
   saveSelfCheck:    (lessonId, checked) => http(`/path/lessons/${lessonId}/page/self-check`, { method: 'POST', body: { checked } }),
 

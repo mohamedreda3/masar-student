@@ -6,6 +6,7 @@ import { useApi, useHome, activityLink, usePageTitle } from '../api/useApi.js';
 import QuestionBody, { realImg, isAnswered } from '../QuestionBody.jsx';
 import { GoalsIntro } from '../QuestionGoals.jsx';
 import AssignmentResult from './AssignmentResult.jsx';
+import { RubricForAssignment } from './RubricEvaluation.jsx';
 import { openFile } from '../FileViewer.jsx';
 import { clickSound, winSound } from '../sounds.js';
 import { showToast } from '../toast.js';
@@ -177,6 +178,9 @@ export default function Assignment() {
 
         {/* نتيجة التسليم */}
         {graded && <AssignmentResult r={A.result} W={W} />}
+
+        {/* تقييم المعايير — يظهر فقط إذا كان الاختبار مرتبطاً بسلّم تقييم واعتمده المعلم */}
+        {graded && <RubricForAssignment assignmentId={id} />}
 
         {submitted && !graded && (
           <div className={'explain-box ' + (A.status === 'graded' ? 'ok' : '')} style={{ marginTop: 20 }}>

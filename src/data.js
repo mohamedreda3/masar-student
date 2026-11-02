@@ -31,6 +31,7 @@ export const moreLinks = [
   { ar: 'ملاحظات المعلم',    en: 'Teacher Feedback',  d: 'تعليقات وتوجيهات على مهامك',     ico: '/img/teacher.png',    to: '/feedback' },
   { ar: 'حسابي والإعدادات',  en: 'Account & Settings', d: 'بياناتك وتفضيلاتك',             ico: '/img/gear.png',       to: '/settings' },
   { ar: 'مركز المهارات',     en: 'Skills Hub',         d: 'مهاراتك الأربع بدروسها وتحدياتها',   ico: '/img/target.png',  to: '/skills' },
+  { ar: 'تقييماتي بالمعايير', en: 'My Rubric Results', d: 'مستواك في كل معيار من معايير اختباراتك', ico: '/img/target.png', to: '/rubric-evaluations' },
 ];
 
 export const skillFooters = {
