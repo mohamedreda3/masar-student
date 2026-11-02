@@ -473,7 +473,7 @@ export function LetterTrace({ config, onDone }) {
   const clock = useClock(null);
   const cv = useRef(null);
   const cur = L[i];
-  const FONT = (h) => `900 ${Math.round(h * 0.66)}px "Noto Naskh Arabic","Tajawal","Cairo",sans-serif`;
+  const FONT = (h) => `900 ${Math.round(h * 0.66)}px "Lemonada","Noto Naskh Arabic","Tajawal","Cairo",sans-serif`;
   useEffect(() => {
     const c = cv.current; if (!c) return;
     const r = c.getBoundingClientRect(); c.width = r.width * 2; c.height = r.height * 2;

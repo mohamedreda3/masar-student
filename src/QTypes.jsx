@@ -975,7 +975,7 @@ function TraceLetter({ q, value, onChange, readOnly }) {
   const [redo, setRedo] = useState(!value);
   const url = value && typeof value === 'object' ? value.image_url : value;
   const letter = q.letter || '';
-  const FONT = (h) => `900 ${Math.round(h * 0.62)}px "Noto Naskh Arabic","Tajawal","Cairo",sans-serif`;
+  const FONT = (h) => `900 ${Math.round(h * 0.62)}px "Lemonada","Noto Naskh Arabic","Tajawal","Cairo",sans-serif`;
   useEffect(() => {
     const c = cv.current; if (!c) return;
     const r = c.getBoundingClientRect();
