@@ -3552,3 +3552,10 @@ html[dir="rtl"] .duo-bubble::before,[dir="rtl"] .duo-bubble::before{transform:ro
 .kpi-grid.kpi-5 { grid-template-columns: repeat(5, 1fr); }
 @media (max-width: 1100px) { .kpi-grid.kpi-5 { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 900px) { .kpi-grid.kpi-5 { grid-template-columns: 1fr 1fr; } }
+
+/* اسم المهارة فوق أسئلتها في المهمة */
+.skill-head {
+  grid-column: 1 / -1; margin: 10px 0 2px; padding: 7px 14px; border-radius: 10px;
+  background: var(--brand-soft, #e8f5ee); color: var(--brand-ink, #15803d);
+  font-weight: 800; font-size: 13px;
+}

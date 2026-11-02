@@ -61,6 +61,8 @@ function Activity({ P }) {
   const [speed, setSpeed] = useState('1.0x');
   const task = P.task;
   const qs = task?.questions || [];
+  // مهارات الدرس بترتيبها — تظهر كعناوين فوق أسئلة كل مهارة
+  const skillNames = new Map((P.skills || []).map(s => [s.skill_id, s.name]));
   const [tf, setTf] = useState({});                 // question_id → 'true' | 'false'
   const [res, setRes] = useState(task?.result || null); // { answers: [{ question_id, is_correct }] }
   const [checked, setChecked] = useState(() => (P.self_check?.items || []).filter(i => i.checked).map(i => i.index));
@@ -174,7 +176,14 @@ function Activity({ P }) {
               const ok = isRight(q.id);
               const graded = ok !== undefined;
               const cls = (v) => 'option' + (mine === v && graded ? (ok ? ' correct' : ' wrong') : mine === v ? ' selected' : '');
+              // اسم المهارة مرة واحدة فوق أول سؤال فيها (الأسئلة تأتي مرتبة بالمهارات)
+              const prevSkill = i > 0 ? (qs[i - 1].skill_id ?? null) : undefined;
+              const mySkill = q.skill_id ?? null;
+              const skillHead = prevSkill !== mySkill
+                ? (skillNames.get(mySkill) ?? (mySkill == null ? 'أسئلة عامة' : null))
+                : null;
               return [
+                skillHead && <div key={`skill-${mySkill ?? 'none'}-${i}`} className="skill-head">{skillHead}</div>,
                 // النص القرائي مرة واحدة قبل أول أسئلته
                 q.passage && q.passage_position?.is_first && <QuestionPassage key={`passage-${q.passage.id}`} q={q} />,
                 <div key={q.id} className={'tf-row' + (graded ? (ok ? ' correct' : ' wrong') : '')}>
