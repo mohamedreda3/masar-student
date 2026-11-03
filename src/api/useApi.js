@@ -1,6 +1,7 @@
-import { createContext, createElement, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, createElement, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import api from './client.js';
 import { applyPrefs } from '../prefs.js';
+import { playNotificationChime } from '../notificationSound.js';
 
 /* جلب بسيط: const { data, loading, error, reload } = useApi(() => api.unit(id), [id]) */
 export function useApi(fn, deps = []) {
@@ -30,6 +31,23 @@ export function HomeProvider({ children }) {
   useEffect(() => { api.settings().then(s => s?.appearance && applyPrefs(s.appearance)).catch(() => {}); }, []);
   const home = data ? { ...data, stats: stats || data.stats } : null;
   const reload = useCallback(() => { reloadHome(); reloadStats(); }, [reloadHome, reloadStats]);
+
+  /* عدّاد الإشعارات يُحدَّث كل دقيقة — بدونه لا يتغيّر الرقم إلا عند إعادة تحميل الصفحة */
+  useEffect(() => {
+    const t = setInterval(reloadStats, 60 * 1000);
+    return () => clearInterval(t);
+  }, [reloadStats]);
+
+  /* رنّة عند وصول إشعار جديد: فقط إذا زاد العدد.
+     أول قراءة لا ترنّ — ما كان بانتظار الطالب قبل فتح الصفحة ليس جديداً. */
+  const notifications = Number(stats?.notifications_count ?? 0) || 0;
+  const prevNotifications = useRef(null);
+  useEffect(() => {
+    const before = prevNotifications.current;
+    prevNotifications.current = notifications;
+    if (before !== null && notifications > before) playNotificationChime();
+  }, [notifications]);
+
   return createElement(HomeCtx.Provider, { value: { home, reload } }, children);
 }
 
