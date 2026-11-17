@@ -168,10 +168,12 @@ export const api = {
     return http(`/assignments/${id}/submit`, { method: 'POST', body: fd });
   },
   // نشاط داخل تكليف (يعمل حتى لو درسه مقفل في المسار)
-  aActivity:        (id, lessonId) => http(`/activities/${id}?lesson_id=${lessonId}`),
-  aStartActivity:   (id, lessonId) => http(`/activities/${id}/start?lesson_id=${lessonId}`, { method: 'POST' }),
-  aSubmitActivity:  (id, lessonId, answers, time_spent_seconds) => http(`/activities/${id}/submit?lesson_id=${lessonId}`, { method: 'POST', body: { answers, time_spent_seconds } }),
-  aCompleteActivity:(id, lessonId, body) => http(`/activities/${id}/complete?lesson_id=${lessonId}`, { method: 'POST', body: body || {} }),
+  // assignmentId: the teacher work the activity was opened from — it is what lets the server
+  // open an activity whose lesson is still locked in the path.
+  aActivity:        (id, lessonId, assignmentId) => http(`/activities/${id}?lesson_id=${lessonId}${assignmentId ? `&assignment_id=${assignmentId}` : ''}`),
+  aStartActivity:   (id, lessonId, assignmentId) => http(`/activities/${id}/start?lesson_id=${lessonId}${assignmentId ? `&assignment_id=${assignmentId}` : ''}`, { method: 'POST' }),
+  aSubmitActivity:  (id, lessonId, answers, time_spent_seconds, assignmentId) => http(`/activities/${id}/submit?lesson_id=${lessonId}${assignmentId ? `&assignment_id=${assignmentId}` : ''}`, { method: 'POST', body: { answers, time_spent_seconds } }),
+  aCompleteActivity:(id, lessonId, body, assignmentId) => http(`/activities/${id}/complete?lesson_id=${lessonId}${assignmentId ? `&assignment_id=${assignmentId}` : ''}`, { method: 'POST', body: body || {} }),
 
   // المسار
   path:     (filter) => http('/path' + (filter && filter !== 'all' ? `?filter=${filter}` : '')),

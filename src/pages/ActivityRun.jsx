@@ -64,11 +64,11 @@ function Recorder({ onDone, has }) {
 }
 
 /* مصدر النشاط: مسار الطالب، أو تكليف من المعلم (يعمل حتى لو درسه مقفل في المسار) */
-const sourceOf = (lessonId, activityId, viaActivities) => (viaActivities ? {
-  get: () => api.aActivity(activityId, lessonId),
-  start: () => api.aStartActivity(activityId, lessonId),
-  submit: (a, t) => api.aSubmitActivity(activityId, lessonId, a, t),
-  complete: (b) => api.aCompleteActivity(activityId, lessonId, b),
+const sourceOf = (lessonId, activityId, viaActivities, assignment) => (viaActivities ? {
+  get: () => api.aActivity(activityId, lessonId, assignment),
+  start: () => api.aStartActivity(activityId, lessonId, assignment),
+  submit: (a, t) => api.aSubmitActivity(activityId, lessonId, a, t, assignment),
+  complete: (b) => api.aCompleteActivity(activityId, lessonId, b, assignment),
 } : {
   get: () => api.activity(lessonId, activityId),
   start: () => api.startActivity(lessonId, activityId),
@@ -78,7 +78,7 @@ const sourceOf = (lessonId, activityId, viaActivities) => (viaActivities ? {
 
 export default function ActivityRun({ lessonId, activityId, assignment, library }) {
   // تكليف أو مكتبة → مسارات /activities/:id (لا تُقفل)، وإلا مسار الطالب
-  const src = sourceOf(lessonId, activityId, assignment || library);
+  const src = sourceOf(lessonId, activityId, assignment || library, assignment);
   const nav = useNavigate();
   const { reload: reloadHome } = useHome();
   const back = assignment ? '/assignment?id=' + assignment : library ? '/activities?tab=library' : '/path';
