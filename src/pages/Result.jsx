@@ -200,6 +200,35 @@ export default function Result() {
           )}
         </div>
 
+        {/* الخطوات العلاجية المربوطة بالأسئلة التي أخطأ فيها — وتظهر لمعلمه أيضاً */}
+        {state?.interventions?.length > 0 && (
+          <div className="card result-info reveal" style={{ marginTop: 26, borderTop: '4px solid var(--gold)', '--rd': '1.4s' }}>
+            <div className="badges-head">
+              <div><h3>🛟 خطوات تساعدك على التحسن</h3><div className="en">Steps to help you improve</div></div>
+            </div>
+            <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
+              {state.interventions.map(p => (
+                <div key={p.id} className="sw-box" style={{ background: 'var(--gold-soft)' }}>
+                  <div style={{ fontWeight: 800 }}>{p.strand_ar || p.title}</div>
+                  {p.content_ar && <div style={{ marginTop: 4, fontSize: 13 }}>{p.content_ar}</div>}
+                  {p.content_en && <div style={{ marginTop: 2, fontSize: 11.5, color: 'var(--mute)', direction: 'ltr', textAlign: 'left' }}>{p.content_en}</div>}
+                  {p.activities?.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+                      {p.activities.map(a => (
+                        <Link key={a.id} className="btn btn-ghost" style={{ fontSize: 12.5, padding: '6px 12px' }}
+                          to={`/quiz/run?lesson=&activity=${a.id}&library=1`}>
+                          ▶ {a.title}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 10, fontSize: 12, color: 'var(--mute)' }}>أُرسلت هذه الخطوات لمعلمك أيضاً ليساعدك فيها.</div>
+          </div>
+        )}
+
         {/* التوجيه التكيفي — الخطوة المقترحة تتغير حسب نتيجتك الفعلية */}
         <div className="adaptive-strip reveal" style={{ '--rd': '1.45s', borderColor: plan.color }}>
           <span className="tagA" style={{ background: plan.color }}>🧭 مسار يقترح لك</span>

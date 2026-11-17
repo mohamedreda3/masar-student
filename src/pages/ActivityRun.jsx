@@ -129,11 +129,12 @@ export default function ActivityRun({ lessonId, activityId, assignment, library 
   const finish = async () => {
     setBusy(true);
     try {
-      let pct = 100, reward = null, correct = null, nextStep = null, unitId = null;
+      let pct = 100, reward = null, correct = null, nextStep = null, unitId = null, interventions = [];
       if (A.questions?.length) {
         const r = await src.submit(A.questions.map(q => ({ question_id: q.id, answer: answers[q.id] ?? null })), Math.round((Date.now() - startedAt.current) / 1000));
         pct = Math.round(r.result?.percentage ?? 0);
         reward = r.reward;
+        interventions = r.interventions || [];
         nextStep = r.next_step; unitId = r.lesson?.unit_id;
         correct = `${r.result?.correct_count ?? 0} من ${r.result?.questions_count ?? A.questions.length}`;
       } else {
@@ -161,7 +162,7 @@ export default function ActivityRun({ lessonId, activityId, assignment, library 
       const na = nextStep?.activity, nl = nextStep?.lesson;
       const next = assignment || library ? back : na && nl ? activityLink(nl.id, na.activity_id) : '/unit?id=' + (nextStep?.unit?.id || unitId || data.unit?.id || '');
       const retry = activityLink(lessonId, activityId) + (assignment ? '&assignment=' + assignment : library ? '&library=1' : '');
-      nav('/result', { state: { pct, reward, correct, time, next, retry } });
+      nav('/result', { state: { pct, reward, correct, time, next, retry, interventions } });
     } catch (ex) {
       showToast(ex.message, '⚠️');
       setBusy(false);
