@@ -8,7 +8,7 @@ export const nav = [
   { to: '/skills',    ar: 'مهاراتي',   en: 'My Skills',     ico: '🎯' },
   { to: '/reports',   ar: 'تقاريري',   en: 'My Reports',    ico: '📊' },
   { to: '/badges',    ar: 'الشارات',   en: 'Badges',        ico: '🏅' },
-  { to: '/challenges',ar: 'التحديات والألعاب', en: 'Challenges & Games', ico: '🎮' },
+  { to: '/challenges',ar: 'التحديات والألعاب', en: 'Challenges & Games', ico: '🧩' },
   { to: '/more',      ar: 'المزيد',    en: 'More',          ico: '✨' },
 ];
 

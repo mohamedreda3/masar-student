@@ -16,7 +16,7 @@ const CH_LOOK = {
   daily_vocabulary: { ico: '/img/flashcards.png', color: 'var(--green)' },
   focus:            { ico: '/img/target2.png',    color: 'var(--purple)' },
   consistency:      { ico: '/img/flame.png',      color: 'var(--orange)' },
-  games:            { ico: '/img/gamepad.png',    color: 'var(--pink)' },
+  games:            { ico: '/img/puzzle.png',    color: 'var(--pink)' },
 };
 const GAME_IMG = { memory_match: '/img/scene-cards.png', word_builder: '/img/needs-words.png', drag_drop: '/img/scene-market.png', puzzle: '/img/scene-story.png', speed_quiz: '/img/scene-discover.png', custom: '/img/scene-garden.png' };
 const gameImg = (g) => realImg(g?.image) || GAME_IMG[g?.game_type] || '/img/scene-cards.png';
@@ -55,7 +55,7 @@ function ChallengeDetails({ k, onClose }) {
           <SecHead ico="/img/target.png" ar="ابدأ من هنا" en="Suggested to move this challenge" />
           {D.suggestions.map(s => (
             <div className="act-row" key={(s.game_id ? 'g' : 'a') + (s.game_id || s.activity_id)} style={{ '--edge': L.color }}>
-              <div className="ico" style={{ background: 'var(--lav-soft)' }}><img src={s.game_id ? '/img/gamepad.png' : '/img/clipboard.png'} alt="" /></div>
+              <div className="ico" style={{ background: 'var(--lav-soft)' }}><img src={s.game_id ? '/img/puzzle.png' : '/img/clipboard.png'} alt="" /></div>
               <div className="body">
                 <h4>{s.title}</h4>
                 <div className="d">{[s.type === 'game' ? 'لعبة' : s.type, s.duration_minutes && s.duration_minutes + ' دقيقة'].filter(Boolean).join(' · ')}</div>
@@ -152,10 +152,10 @@ export default function Challenges() {
 
         <div className="grid-main">
           <div className="col">
-            <SecHead ico="/img/gamepad.png" ar="الألعاب التعليمية" en="Educational Games — العب لتُنجز تحدياتك" />
+            <SecHead ico="/img/puzzle.png" ar="الألعاب التعليمية" en="Educational Games — العب لتُنجز تحدياتك" />
             {G.new_game && (
               <a href="#!" onClick={(e) => { e.preventDefault(); play(G.new_game); }} className="adaptive-strip" style={{ borderColor: 'var(--green)', marginTop: 0, marginBottom: 14 }}>
-                <span className="tagA" style={{ background: 'var(--green)' }}>🎮 لعبة جديدة</span>
+                <span className="tagA" style={{ background: 'var(--green)' }}>🧩 لعبة جديدة</span>
                 <div className="why">{G.new_game.message || G.new_game.title} <b style={{ color: 'var(--green-deep)' }}>العب ←</b></div>
               </a>
             )}
@@ -166,7 +166,7 @@ export default function Challenges() {
                 </button>
               ))}
             </div>
-            {D && !G.items?.length && <div className="card" style={{ textAlign: 'center', padding: 26 }}><img src="/img/owl.png" alt="" style={{ width: 90 }} /><Empty t="ألعاب هذا القسم قادمة قريباً!" e="New games are on the way" d="جرّب قسماً آخر الآن 🎮" /></div>}
+            {D && !G.items?.length && <div className="card" style={{ textAlign: 'center', padding: 26 }}><img src="/img/owl.png" alt="" style={{ width: 90 }} /><Empty t="ألعاب هذا القسم قادمة قريباً!" e="New games are on the way" d="جرّب قسماً آخر الآن 🧩" /></div>}
             <div className="games-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
               {(G.items || []).map(g => {
                 const known = !!GAMES[g.game_type];
@@ -187,7 +187,7 @@ export default function Challenges() {
                     <div style={{ fontWeight: 800, fontSize: 15 }}>{g.title}</div>
                     <div style={{ fontSize: 10, color: 'var(--mute2)' }}>{g.game_type_label} · {g.category_label}</div>
                     <div className="gcard-stars" title={g.my_best_percentage != null ? 'أفضل نتيجة: ' + Math.round(g.my_best_percentage) + '%' : 'لم تلعبها بعد'}>{[0, 1, 2].map(k => <i key={k} className={k < stars ? 'on' : ''}>★</i>)}</div>
-                    {g.plays_count != null && <div style={{ fontSize: 10.5, color: 'var(--mute2)' }}>🎮 {g.plays_count} لعبة</div>}
+                    {g.plays_count != null && <div style={{ fontSize: 10.5, color: 'var(--mute2)' }}>🧩 {g.plays_count} لعبة</div>}
                     {known
                       ? <button className="btn-sm gcard-play" onClick={() => play(g)} style={{ marginTop: 10, width: '100%' }}>{g.my_plays ? 'العب مجدداً' : 'العب'}</button>
                       : <div className="qt-muted" style={{ marginTop: 10 }}>قريباً ⏳</div>}

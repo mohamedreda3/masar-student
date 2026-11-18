@@ -116,7 +116,7 @@ export default function PlayGame() {
             <div className="card activity-card gs-stage">
               {known
                 ? <GamePlayer key={run} shell game={G} onDone={done} />
-                : <Empty t="هذه اللعبة قادمة قريباً!" e="Coming soon" d="نجهّزها لك الآن — جرّب لعبة أخرى 🎮" />}
+                : <Empty t="هذه اللعبة قادمة قريباً!" e="Coming soon" d="نجهّزها لك الآن — جرّب لعبة أخرى 🧩" />}
 
               {mine && (
                 <div className="gs-win">
@@ -150,7 +150,7 @@ export default function PlayGame() {
           <div className="gs-sheet" onClick={e => e.stopPropagation()}>
             {photoOnly(G.image) || photoOnly(G.activity?.thumbnail) || photoOnly(G.unit?.image)
               ? <Picture src={photoOnly(G.image) || photoOnly(G.activity?.thumbnail) || photoOnly(G.unit?.image)} alt={G.title} className="gs-cover" />
-              : <div className="gs-sheet-ico">{E?.ico || '🎮'}</div>}
+              : <div className="gs-sheet-ico">{E?.ico || '🧩'}</div>}
             <h3>كيف ألعب؟</h3>
             <p>{howText || 'اتبع التعليمات على الشاشة.'}</p>
             {G.instructions_en && <p className="en" dir="ltr">{G.instructions_en}</p>}

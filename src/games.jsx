@@ -443,7 +443,7 @@ export default function GamePlayer({ game, onDone, shell = false }) {
   if (shell) return G ? <ShellCtx.Provider value><G config={game.config || {}} onDone={onDone} /></ShellCtx.Provider> : null;
   return (
     <>
-      <div className="q-title">🎮 {game.title || 'لعبة'}</div>
+      <div className="q-title">🧩 {game.title || 'لعبة'}</div>
       {(game.instructions || game.description) && <div className="q-en">{game.instructions || game.description}</div>}
       {G ? <G config={game.config || {}} onDone={onDone} />
         : <div className="explain-box" style={{ marginTop: 14 }}><div>نوع اللعبة «{game.game_type}» غير مدعوم بعد.

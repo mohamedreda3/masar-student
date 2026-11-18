@@ -32,7 +32,7 @@ const FILE_ICO = (m = '') => (m.includes('pdf') ? '📕' : m.startsWith('audio')
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleString('ar-EG-u-nu-latn', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '');
 const ACT_ST = { completed: { ar: 'مكتملة', cta: 'راجع' }, in_progress: { ar: 'جارية', cta: 'تابع' } };
-const TYPE_ICO = { exercise: '/img/clipboard.png', flashcard: '/img/flashcards.png', pronunciation: '/img/mic.png', listening: '/img/headphones.png', reading: '/img/book.png', writing: '/img/pencil.png', game: '/img/gamepad.png' };
+const TYPE_ICO = { exercise: '/img/clipboard.png', flashcard: '/img/flashcards.png', pronunciation: '/img/mic.png', listening: '/img/headphones.png', reading: '/img/book.png', writing: '/img/pencil.png', game: '/img/puzzle.png' };
 const TYPE_AR = { exercise: 'تمرين', flashcard: 'بطاقات', pronunciation: 'نطق', listening: 'استماع', reading: 'قراءة', writing: 'كتابة', game: 'لعبة' };
 
 /* عدّاد تنازلي لنهاية المحاولة */

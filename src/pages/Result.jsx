@@ -242,7 +242,7 @@ export default function Result() {
             <span className="sub">Retry</span>
           </Link>
           <Link to="/challenges" className="btn btn-ghost btn-col">
-            <span>🎮 تدريب سريع</span>
+            <span>🧩 تدريب سريع</span>
             <span className="sub">Quick Practice</span>
           </Link>
           <Link to={plan.to} className="btn btn-primary btn-col" style={{ flex: 1.4, background: plan.color }}>

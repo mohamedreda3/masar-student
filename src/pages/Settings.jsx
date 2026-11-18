@@ -193,7 +193,7 @@ export default function Settings() {
 
           {/* المظهر */}
           <div className="setting-card">
-            <h3><img src="/img/lamp.png" alt="" />المظهر</h3>
+            <h3><img src="/img/bulb.png" alt="" />المظهر</h3>
             <div className="en">Appearance</div>
             <div style={{ padding: '10px 0', borderBottom: '1px solid var(--line2)' }}>
               <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--ink2)', marginBottom: 4 }}>تدرجات ألوان منصتك ✨</div>

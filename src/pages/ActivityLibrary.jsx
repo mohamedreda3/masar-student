@@ -12,7 +12,7 @@ import { clickSound } from '../sounds.js';
 const TYPE_LOOK = {
   exercise:      { color: '#2563eb', ico: '/img/clipboard.png' },
   flashcard:     { color: '#16a34a', ico: '/img/flashcards.png' },
-  game:          { color: '#ea580c', ico: '/img/gamepad.png' },
+  game:          { color: '#ea580c', ico: '/img/puzzle.png' },
   pronunciation: { color: '#db2777', ico: '/img/mic.png' },
 };
 const STATUS = [

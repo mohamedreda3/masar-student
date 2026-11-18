@@ -57,11 +57,11 @@ function Hero({ P }) {
             <div><div className="t">مكتبة القصص</div><div className="e">Story Library</div></div>
           </Link>
           <Link to="/support" className="toolkit-item">
-            <img src="/img/lamp.png" alt="" />
+            <img src="/img/bulb.png" alt="" />
             <div><div className="t">أحتاج مساعدة</div><div className="e">Support</div></div>
           </Link>
           <Link to="/challenges" className="toolkit-item">
-            <img src="/img/gamepad.png" alt="" />
+            <img src="/img/puzzle.png" alt="" />
             <div><div className="t">التحديات والألعاب</div><div className="e">Challenges &amp; Games</div></div>
           </Link>
         </div>
@@ -138,11 +138,11 @@ function MyGroup() {
               <div><div className="t">مكتبة القصص</div><div className="e">Story Library</div></div>
             </Link>
             <Link to="/support" className="toolkit-item">
-              <img src="/img/lamp.png" alt="" />
+              <img src="/img/bulb.png" alt="" />
               <div><div className="t">أحتاج مساعدة</div><div className="e">Support</div></div>
             </Link>
             <Link to="/challenges" className="toolkit-item">
-              <img src="/img/gamepad.png" alt="" />
+              <img src="/img/puzzle.png" alt="" />
               <div><div className="t">التحديات والألعاب</div><div className="e">Challenges &amp; Games</div></div>
             </Link>
           </div>

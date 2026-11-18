@@ -227,7 +227,7 @@ export default function Support() {
           </div>
         )}
 
-        <SecHead ico="/img/lamp.png" ar="مصادر تساعدك" en="Resources for You" />
+        <SecHead ico="/img/bulb.png" ar="مصادر تساعدك" en="Resources for You" />
         {loading && !D && <Empty t="جارٍ تحميل المصادر…" e="Loading" />}
         {!loading && !error && !resources.length && <Empty t="لا توجد مصادر بعد" e="No resources yet" d="ستظهر هنا المصادر التي يضيفها معلمك والمنصة." />}
         <div className="more-grid">

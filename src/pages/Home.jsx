@@ -317,7 +317,7 @@ function Games() {
   if (!games.length) return null;
   return (
     <>
-      <SecHead ico="/img/gamepad.png" ar="الألعاب التعليمية" en="Educational Games" link="كل الألعاب" to="/challenges" />
+      <SecHead ico="/img/puzzle.png" ar="الألعاب التعليمية" en="Educational Games" link="كل الألعاب" to="/challenges" />
       <div className="games-grid">
         {games.map(g => (
           <Link to={'/play?game=' + g.id} className="game-card" key={g.id}>
