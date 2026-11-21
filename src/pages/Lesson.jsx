@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Logo, Empty, SecHead } from '../components.jsx';
+import { Logo, Empty, SecHead, Crumbs } from '../components.jsx';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../api/client.js';
 import { useApi, useHome, activityLink, ST, photoOnly, usePageTitle } from '../api/useApi.js';
@@ -407,6 +407,7 @@ export default function Lesson() {
     <div className="page" style={{ background: 'var(--wash)' }}>
       <FocusBar P={P} />
       <div className="container">
+        {P && <Crumbs items={[{ label: 'مساري', to: '/path' }, { label: P.unit?.title, to: P.unit?.id ? '/unit?id=' + P.unit.id : '/path' }, { label: P.lesson?.name }]} />}
         {/* صفحة الدرس مقفلة في المسار (403) → نعرض أنشطة الدرس من مكتبة المنصة (لا تُقفل) بدل رسالة القفل */}
         {error && error.status === 403 && (
           <div style={{ marginTop: 26 }}>

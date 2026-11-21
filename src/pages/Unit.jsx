@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { showToast } from '../toast.js';
 import { openFile } from '../FileViewer.jsx';
-import { StatsBar, SecHead, FooterStrip } from '../components.jsx';
+import { StatsBar, SecHead, Crumbs, FooterStrip } from '../components.jsx';
 import api from '../api/client.js';
 import { useApi, ST as toStatus, activityLink, unitArt, lessonArt, usePageTitle } from '../api/useApi.js';
 import { clickSound } from '../sounds.js';
@@ -115,6 +115,7 @@ export default function Unit() {
     <div className="page">
       <StatsBar />
       <div className="container">
+        <Crumbs items={[{ label: 'مساري', to: '/path' }, { label: u.level?.name || u.grade?.name, to: '/path' }, { label: U.ar }]} />
         <div className="hero" style={{ padding: '30px 40px' }}>
           <div className="hero-img" style={{ maxWidth: 300, width: '100%' }}>
             <img src={U.img} alt="" />

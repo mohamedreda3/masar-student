@@ -124,6 +124,22 @@ export function Ring({ pct, size = 92, stroke = 9, color = '#1d6fe0', track = '#
   );
 }
 
+/* أين أنا: مساري ‹ المستوى ‹ الوحدة ‹ الدرس — items: [{ label, to? }]، الأخير هو الصفحة الحالية */
+export function Crumbs({ items }) {
+  return (
+    <nav aria-label="breadcrumb" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, margin: '18px 0 0', fontSize: 14, fontWeight: 700 }}>
+      {items.filter(i => i.label).map((it, i) => (
+        <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {i > 0 && <span style={{ color: 'var(--mute)' }}>‹</span>}
+          {it.to
+            ? <Link to={it.to} style={{ color: 'var(--mute)', textDecoration: 'none' }}>{it.label}</Link>
+            : <span style={{ color: 'var(--brand)' }}>{it.label}</span>}
+        </span>
+      ))}
+    </nav>
+  );
+}
+
 export function SecHead({ ico, ar, en, link, to, onLink }) {
   return (
     <div className="sec-head">
